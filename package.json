@@ -2,6 +2,8 @@
   "name": "beacon",
   "version": "0.0.1",
   "private": true,
+  "description": "Menu-bar watcher for Claude Code and Codex CLI sessions across all your repos.",
+  "author": "Marcus",
   "type": "module",
   "main": "./out/main/index.js",
   "bin": {

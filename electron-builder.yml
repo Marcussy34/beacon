@@ -1,0 +1,28 @@
+appId: com.marcus.beacon
+productName: Beacon
+directories:
+  buildResources: build
+files:
+  - out/**
+  - package.json
+# beacon-hook is bundled (via build:hook) and shipped unpacked so the installed hook
+# command can resolve a real executable path inside the .app at runtime.
+extraResources:
+  - from: dist/hook/beacon-hook.cjs
+    to: beacon-hook.cjs
+  - from: resources/iconTemplate.png
+    to: iconTemplate.png
+  - from: resources/iconTemplate@2x.png
+    to: iconTemplate@2x.png
+mac:
+  category: public.app-category.developer-tools
+  # Unsigned local build (no DMG, no notarization). Signing needs an Apple Developer ID;
+  # add `identity` + a notarize step here later for distribution.
+  target:
+    - target: dir
+  extendInfo:
+    # No dock icon / no Cmd-Tab — pure menu-bar app.
+    LSUIElement: true
+    # Required so "Go to" can drive Terminal/VS Code/Cursor via AppleScript (Apple Events).
+    NSAppleEventsUsageDescription: "Beacon focuses your terminal or editor window via AppleScript when you click 'Go to'."
+  entitlementsInherit: build/entitlements.mac.plist
