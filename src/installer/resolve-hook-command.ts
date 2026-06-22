@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 /** Double-quote a path for embedding in a POSIX shell command string. */
 function shellQuote(p: string): string {
@@ -26,6 +25,7 @@ export function resolveHookCommand(opts: ResolveOptions = {}): string {
 
 /** Best-effort package root: this file sits at <root>/src/installer/, so go up two levels. */
 function defaultRoot(): string {
-  const here = fileURLToPath(new URL('.', import.meta.url)); // .../src/installer/
-  return join(here, '..', '..');
+  // Use __dirname which is available in both ESM and CJS; works across all build targets.
+  // This file is at <root>/src/installer/resolve-hook-command.ts, so go up two levels.
+  return join(__dirname, '..', '..');
 }
