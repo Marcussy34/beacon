@@ -63,7 +63,12 @@ function main(): void {
 
   // Fire-and-forget: never block the CLI. Always exit 0.
   const sock = connect(SOCKET_PATH);
-  const done = () => process.exit(0);
+  let exited = false;
+  const done = () => {
+    if (exited) return;
+    exited = true;
+    process.exit(0);
+  };
   sock.on('error', done);
   sock.setTimeout(300, () => { sock.destroy(); done(); });
   sock.on('connect', () => { sock.write(JSON.stringify(raw) + '\n', () => { sock.end(); }); });
