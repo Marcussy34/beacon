@@ -29,4 +29,8 @@ describe('buildFocusCommand', () => {
     expect(buildFocusCommand({ ...base, gotoPrecision: 'degraded', remote: 'ssh' }))
       .toEqual({ kind: 'copy-path', path: '/Users/m/repo' });
   });
+  it('terminal host without a tty (defensive) -> reveal', () => {
+    expect(buildFocusCommand({ ...base, host: 'terminal', tty: undefined }))
+      .toEqual({ kind: 'reveal', path: '/Users/m/repo' });
+  });
 });

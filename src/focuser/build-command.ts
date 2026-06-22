@@ -26,6 +26,9 @@ export function buildFocusCommand(session: Session): FocusCommand {
   if (session.host === 'cursor') {
     return { kind: 'editor', cli: 'cursor', gitRoot: path, bundleId: BUNDLE.cursor };
   }
-  // Defensive: a precise session should always match above; reveal locally otherwise.
+  // Defensive: a precise session should always match a branch above. The only
+  // way to reach here is a 'terminal' host with no tty — which M1's parser
+  // already marks 'degraded', so this is unreachable via the real pipeline.
+  // Reveal locally as the safe fallback.
   return { kind: 'reveal', path };
 }
