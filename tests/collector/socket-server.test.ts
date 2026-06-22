@@ -23,6 +23,20 @@ function send(path: string, payload: string): Promise<void> {
   });
 }
 
+function sendChunks(path: string, chunks: string[]): Promise<void> {
+  return new Promise((res, rej) => {
+    const c = connect(path, async () => {
+      for (const ch of chunks) {
+        c.write(ch);
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      c.end();
+    });
+    c.on('error', rej);
+    c.on('close', () => res());
+  });
+}
+
 const raw: RawHookEvent = {
   tool: 'claude', event: 'Stop', sessionId: 's1', cwd: '/r',
   host: 'terminal', remote: 'none', ts: 1,
@@ -45,6 +59,17 @@ describe('startCollector', () => {
     await send(socketPath, line + '\nnot-json\n' + line + '\n');
     await new Promise((r) => setTimeout(r, 50));
     expect(received).toHaveLength(2);
+    await col.close();
+  });
+  it('reassembles an event whose JSON is split across two writes', async () => {
+    const received: RawHookEvent[] = [];
+    const col = await startCollector(socketPath, (e) => received.push(e));
+    const line = JSON.stringify(raw);
+    const mid = Math.floor(line.length / 2);
+    await sendChunks(socketPath, [line.slice(0, mid), line.slice(mid) + '\n']);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(received).toHaveLength(1);
+    expect(received[0]!.sessionId).toBe('s1');
     await col.close();
   });
 });
