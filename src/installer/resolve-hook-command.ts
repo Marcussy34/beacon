@@ -26,10 +26,12 @@ export interface ResolveOptions {
  */
 export function resolveHookCommand(opts: ResolveOptions = {}): string {
   if (opts.packaged) {
-    // Packaged Electron invocation — execPath + resourcesPath are required
-    const exec = opts.execPath ?? '';
-    const res = opts.resourcesPath ?? '';
-    return `ELECTRON_RUN_AS_NODE=1 ${shellQuote(exec)} ${shellQuote(join(res, 'beacon-hook.cjs'))}`;
+    // Packaged Electron invocation — execPath + resourcesPath are REQUIRED. Throw rather than
+    // emit a broken `... "" "beacon-hook.cjs"` command that would silently fail at hook runtime.
+    if (!opts.execPath || !opts.resourcesPath) {
+      throw new Error('resolveHookCommand: execPath and resourcesPath are required in packaged mode');
+    }
+    return `ELECTRON_RUN_AS_NODE=1 ${shellQuote(opts.execPath)} ${shellQuote(join(opts.resourcesPath, 'beacon-hook.cjs'))}`;
   }
   const root = opts.rootDir ?? defaultRoot();
   const node = opts.nodeBin ?? 'node';
