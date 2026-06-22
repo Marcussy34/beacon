@@ -2,7 +2,13 @@ import {
   BEACON_MARKER_FLAG, type BeaconHookSpec, type HookConfig, type HookGroup, type MergePlan, type UninstallPlan,
 } from './types';
 
-/** A command belongs to Beacon iff it carries the marker flag. */
+/**
+ * A command belongs to Beacon iff it carries the marker flag.
+ * ASSUMPTION: this is a substring match, so a user command that literally contains
+ * `--beacon-marker` would be treated as Beacon's and removed on uninstall. Acceptable —
+ * `--beacon-marker` is Beacon's private flag and would not appear in a real user hook.
+ * M3 hardening option: anchor the match to the resolved invocation prefix, not just the flag.
+ */
 export function isBeaconCommand(command: string): boolean {
   return command.includes(BEACON_MARKER_FLAG);
 }
