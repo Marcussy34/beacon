@@ -3,13 +3,21 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "bin": {
+    "beacon-hook": "dist/hook/beacon-hook.cjs",
+    "beacon-install": "dist/installer/cli.cjs"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:hook": "esbuild src/hook/beacon-hook.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/hook/beacon-hook.cjs",
+    "build:installer": "esbuild src/installer/cli-entry.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/installer/cli.cjs",
+    "build": "npm run build:hook && npm run build:installer"
   },
   "devDependencies": {
     "@types/node": "^22.5.0",
+    "esbuild": "^0.24.2",
     "tsx": "^4.22.4",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
