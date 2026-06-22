@@ -10,14 +10,27 @@ export interface ResolveOptions {
   rootDir?: string;
   /** Node binary to invoke (resolved from the CLI's PATH at hook time). Defaults to 'node'. */
   nodeBin?: string;
+  /** Packaged-app mode: use ELECTRON_RUN_AS_NODE invocation instead of `node`. */
+  packaged?: boolean;
+  /** Path to the Electron execPath (required when packaged=true). */
+  execPath?: string;
+  /** Path to the app's Resources directory (required when packaged=true). */
+  resourcesPath?: string;
 }
 
 /**
  * Resolve the shell-safe invocation prefix for the built beacon-hook.
  * Dev/runnable default: `node "<root>/dist/hook/beacon-hook.cjs"`.
- * (M3 packaging is the single place to switch to the bundled binary.)
+ * Packaged mode (M3): `ELECTRON_RUN_AS_NODE=1 "<execPath>" "<resourcesPath>/beacon-hook.cjs"`.
+ * buildHookCommand appends `--beacon-marker <id> <tool> <event>` to this prefix.
  */
 export function resolveHookCommand(opts: ResolveOptions = {}): string {
+  if (opts.packaged) {
+    // Packaged Electron invocation — execPath + resourcesPath are required
+    const exec = opts.execPath ?? '';
+    const res = opts.resourcesPath ?? '';
+    return `ELECTRON_RUN_AS_NODE=1 ${shellQuote(exec)} ${shellQuote(join(res, 'beacon-hook.cjs'))}`;
+  }
   const root = opts.rootDir ?? defaultRoot();
   const node = opts.nodeBin ?? 'node';
   return `${node} ${shellQuote(join(root, 'dist', 'hook', 'beacon-hook.cjs'))}`;

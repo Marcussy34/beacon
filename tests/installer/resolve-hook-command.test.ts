@@ -18,3 +18,15 @@ describe('resolveHookCommand', () => {
     expect(out).toContain('\\"'); // the embedded quote is backslash-escaped
   });
 });
+
+describe('resolveHookCommand (packaged mode)', () => {
+  it('returns ELECTRON_RUN_AS_NODE=1 prefix with shell-quoted execPath and hook path', () => {
+    const out = resolveHookCommand({ packaged: true, execPath: '/App/Beacon.app/MacOS/Beacon', resourcesPath: '/App/Beacon.app/Resources' });
+    expect(out).toBe('ELECTRON_RUN_AS_NODE=1 "/App/Beacon.app/MacOS/Beacon" "/App/Beacon.app/Resources/beacon-hook.cjs"');
+  });
+  it('shell-quotes paths with spaces in packaged mode', () => {
+    const out = resolveHookCommand({ packaged: true, execPath: '/My App/Beacon', resourcesPath: '/My App/Resources' });
+    expect(out).toContain('"/My App/Beacon"');
+    expect(out).toContain('"/My App/Resources/beacon-hook.cjs"');
+  });
+});

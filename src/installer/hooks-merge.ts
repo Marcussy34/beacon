@@ -25,12 +25,34 @@ function clone(config: HookConfig): HookConfig {
   return JSON.parse(JSON.stringify(config ?? {}));
 }
 
-/** Merge Beacon specs into a config. New object; idempotent; preserves siblings + existing hooks. */
+/**
+ * Remove any Beacon-marked hook entries from `event` in `hooks`.
+ * Prunes groups that become empty; deletes the event key if it becomes empty.
+ * Mutates `hooks` in-place (called only on a clone).
+ */
+function removeBeaconFromEvent(hooks: NonNullable<HookConfig['hooks']>, event: string): void {
+  const groups = hooks[event];
+  if (!groups) return;
+  // filter out Beacon entries from each group, then drop empty groups
+  const pruned = groups
+    .map(g => ({ ...g, hooks: (g.hooks ?? []).filter(h => !isBeaconCommand(h.command)) }))
+    .filter(g => g.hooks.length > 0);
+  if (pruned.length > 0) hooks[event] = pruned;
+  else delete hooks[event];
+}
+
+/**
+ * Merge Beacon specs into a config. New object; idempotent; preserves siblings + existing hooks.
+ * Idempotency key is (event + marker): if the exact command is already present → no-op;
+ * if a DIFFERENT Beacon command exists for the same event → replace it (stale invocation).
+ */
 export function mergeBeaconHooks(config: HookConfig, specs: BeaconHookSpec[]): HookConfig {
   const next = clone(config);
   const hooks = (next.hooks ??= {});
   for (const spec of specs) {
-    if (hasBeaconHook(next, spec.event, spec.command)) continue; // idempotent
+    if (hasBeaconHook(next, spec.event, spec.command)) continue; // exact match → idempotent no-op
+    // Remove any stale Beacon entry for this event before adding the new one
+    removeBeaconFromEvent(hooks, spec.event);
     const arr = (hooks[spec.event] ??= []);
     const entry = spec.timeout != null
       ? { type: 'command' as const, command: spec.command, timeout: spec.timeout }
