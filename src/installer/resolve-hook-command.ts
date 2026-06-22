@@ -25,7 +25,11 @@ export function resolveHookCommand(opts: ResolveOptions = {}): string {
 
 /** Best-effort package root: this file sits at <root>/src/installer/, so go up two levels. */
 function defaultRoot(): string {
-  // Use __dirname which is available in both ESM and CJS; works across all build targets.
-  // This file is at <root>/src/installer/resolve-hook-command.ts, so go up two levels.
+  // NOTE: __dirname is a CommonJS global. It is defined here ONLY because this function
+  // ships exclusively via the esbuild CJS bundle (dist/installer/cli.cjs), where __dirname
+  // resolves to dist/installer/ and `../..` lands on the package root. It is NOT defined in
+  // native ESM, so defaultRoot() must never be called from un-bundled ESM source — callers in
+  // ESM contexts (e.g. M3's Electron main) MUST pass an explicit `rootDir`. typecheck stays
+  // clean because tsconfig's "types":["node"] injects __dirname into the type namespace.
   return join(__dirname, '..', '..');
 }
