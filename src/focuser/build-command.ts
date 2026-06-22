@@ -1,0 +1,31 @@
+import type { Session } from '../domain/types';
+import type { FocusCommand } from './types';
+
+// Activation bundle ids — must match host detection in src/hook/build-event.ts.
+const BUNDLE = {
+  vscode: 'com.microsoft.VSCode',
+  cursor: 'com.todesktop.230313mzl4w4u92',
+} as const;
+
+export function buildFocusCommand(session: Session): FocusCommand {
+  const path = session.gitRoot;
+
+  // Degraded: can't focus the exact window. Reveal locally; copy path if remote.
+  if (session.gotoPrecision === 'degraded') {
+    return session.remote === 'none'
+      ? { kind: 'reveal', path }
+      : { kind: 'copy-path', path };
+  }
+
+  if (session.host === 'terminal' && session.tty) {
+    return { kind: 'terminal-app', tty: session.tty };
+  }
+  if (session.host === 'vscode') {
+    return { kind: 'editor', cli: 'code', gitRoot: path, bundleId: BUNDLE.vscode };
+  }
+  if (session.host === 'cursor') {
+    return { kind: 'editor', cli: 'cursor', gitRoot: path, bundleId: BUNDLE.cursor };
+  }
+  // Defensive: a precise session should always match above; reveal locally otherwise.
+  return { kind: 'reveal', path };
+}
