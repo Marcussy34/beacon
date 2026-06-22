@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync, openSync, closeSync, statSync, readdirSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync, openSync, closeSync, statSync, readdirSync, symlinkSync, lstatSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readJsonOrDefault, writeJsonAtomic } from '../../src/installer/atomic-file';
@@ -63,5 +63,21 @@ describe('writeJsonAtomic', () => {
     writeJsonAtomic(p, { a: 1 });
     const leftovers = readdirSync(dir).filter(f => f.includes('.beacon-tmp') || f.includes('.beacon-lock'));
     expect(leftovers).toEqual([]);
+  });
+  it('writes THROUGH a symlink: preserves the link, updates the real file, backs up the real file', () => {
+    const real = join(dir, 'real-settings.json');
+    const link = join(dir, 'settings.json');
+    writeFileSync(real, JSON.stringify({ old: true }));
+    symlinkSync(real, link);
+    // canonical real path (macOS resolves /var -> /private/var, which realpathSync returns)
+    const canonicalReal = realpathSync(real);
+    const { backupPath } = writeJsonAtomic(link, { fresh: true }, { now: 7 });
+    // the symlink is preserved (NOT replaced by a regular file)
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    // the real file is updated through the link
+    expect(JSON.parse(readFileSync(real, 'utf8'))).toEqual({ fresh: true });
+    // the backup is taken from (and sits next to) the REAL file
+    expect(backupPath).toBe(`${canonicalReal}.beacon-backup-7`);
+    expect(JSON.parse(readFileSync(backupPath!, 'utf8'))).toEqual({ old: true });
   });
 });
