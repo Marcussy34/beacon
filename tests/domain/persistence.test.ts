@@ -39,4 +39,9 @@ describe('persistence', () => {
     await w.flush();
     expect(await loadSnapshot(p)).toEqual(snap);
   });
+  it('flush with nothing scheduled resolves without error', async () => {
+    const p = join(dir, 'state.json');
+    const w = createDebouncedWriter(p, 50);
+    await expect(w.flush()).resolves.toBeUndefined();
+  });
 });

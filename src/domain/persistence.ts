@@ -21,29 +21,36 @@ export async function loadSnapshot(path: string): Promise<SessionsSnapshot | nul
 }
 
 /** Single-writer debounced persistence: coalesces rapid updates into one write. */
-export function createDebouncedWriter(path: string, delayMs: number) {
+export function createDebouncedWriter(
+  path: string,
+  delayMs: number,
+  onError?: (err: unknown) => void,
+): { schedule(snap: SessionsSnapshot): void; flush(): Promise<void> } {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let pending: SessionsSnapshot | null = null;
   let inflight: Promise<void> = Promise.resolve();
 
-  const write = async () => {
-    if (!pending) return;
+  const write = (): Promise<void> => {
+    if (!pending) return inflight; // nothing new; await any in-progress write
     const snap = pending;
     pending = null;
     inflight = inflight.then(() => saveSnapshot(path, snap));
-    await inflight;
+    return inflight;
   };
 
   return {
     schedule(snap: SessionsSnapshot): void {
       pending = snap;
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => { void write(); }, delayMs);
+      timer = setTimeout(() => {
+        timer = null;
+        // Background write: report errors so they never become unhandled rejections.
+        write().catch((err) => onError?.(err));
+      }, delayMs);
     },
     async flush(): Promise<void> {
       if (timer) { clearTimeout(timer); timer = null; }
       await write();
-      await inflight;
     },
   };
 }
