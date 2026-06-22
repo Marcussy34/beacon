@@ -25,18 +25,21 @@ describe('applyEvent', () => {
     expect(s.state).toBe('waiting');
     expect(s.attention).toBe('needs-you');
     expect(s.seen).toBe(false);
+    expect(s.lastEventAt).toBe(3);
   });
   it('turn-done -> done, attention done, seen false', () => {
     const s = applyEvent(session, ev('turn-done', 4));
     expect(s.state).toBe('done');
     expect(s.attention).toBe('done');
     expect(s.seen).toBe(false);
+    expect(s.lastEventAt).toBe(4);
   });
   it('session-end -> closed, attention cleared, seen true', () => {
     const s = applyEvent({ ...session, attention: 'done', seen: false }, ev('session-end', 5));
     expect(s.state).toBe('closed');
     expect(s.attention).toBe('none');
     expect(s.seen).toBe(true);
+    expect(s.lastEventAt).toBe(5);
   });
   it('does not mutate the input session', () => {
     applyEvent(session, ev('needs-you', 9));

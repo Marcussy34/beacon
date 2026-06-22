@@ -29,6 +29,11 @@ export function applyEvent(session: Session, event: BeaconEvent): Session {
       attention = 'none';
       seen = true;
       break;
+    // Exhaustiveness guard: compile error if a new event kind is added unhandled
+    default: {
+      const _exhaustive: never = event.kind;
+      throw new Error(`Unhandled event kind: ${String(_exhaustive)}`);
+    }
   }
 
   return { ...session, state, attention, seen, lastEventAt: event.ts };
