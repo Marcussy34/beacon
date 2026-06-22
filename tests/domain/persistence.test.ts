@@ -1,6 +1,6 @@
 // tests/domain/persistence.test.ts
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { saveSnapshot, loadSnapshot, createDebouncedWriter } from '../../src/domain/persistence';
@@ -43,5 +43,23 @@ describe('persistence', () => {
     const p = join(dir, 'state.json');
     const w = createDebouncedWriter(p, 50);
     await expect(w.flush()).resolves.toBeUndefined();
+  });
+  it('a failed write does not poison the chain: a later write still persists', async () => {
+    // Put a FILE where saveSnapshot wants a directory → its mkdir(dirname) fails (first write rejects).
+    const blocker = join(dir, 'blk');
+    await writeFile(blocker, 'x', 'utf8');
+    const p = join(blocker, 'state.json'); // dirname(p) === blocker (a file)
+    const w = createDebouncedWriter(p, 5);
+
+    w.schedule({ version: 1, sessions: [] });
+    await w.flush().catch(() => {}); // first write rejects
+
+    // Unblock: replace the file with a real directory so subsequent writes can succeed.
+    await rm(blocker);
+    await mkdir(blocker);
+
+    w.schedule({ version: 1, sessions: [] });
+    await w.flush(); // must ATTEMPT despite the prior rejection (chain not poisoned)
+    expect(await loadSnapshot(p)).not.toBeNull(); // the later snapshot WAS persisted
   });
 });

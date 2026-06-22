@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { appPaths } from '../core/app-paths';
-import { createBeaconCore } from '../core/beacon-core';
+import { createBeaconCore, type BeaconCore } from '../core/beacon-core';
 import { createTray } from './tray';
 import { createIpcHandlers } from './ipc';
 import { focusSession, systemRunner } from '../focuser/focus';
@@ -24,7 +24,17 @@ else {
       onToggle: () => { if (win?.isVisible()) win.hide(); else showPanel(); },
     });
 
-    const core = await createBeaconCore({ paths, onChange: () => refresh() });
+    // Startup must not leave a dangling tray + unhandled rejection if core init fails
+    // (mkdir / socket bind / watcher). Clean up and exit non-zero instead.
+    let core: BeaconCore;
+    try {
+      core = await createBeaconCore({ paths, onChange: () => refresh() });
+    } catch (err) {
+      console.error('Beacon failed to start:', err);
+      tray.destroy();
+      app.exit(1);
+      return;
+    }
 
     function refresh(): void {
       tray.setBadge(core.attentionCount());
@@ -51,7 +61,10 @@ else {
           webPreferences: { preload: join(__dirname, '../preload/index.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
         });
         win.on('closed', () => { win = null; }); // reset so refresh()/showPanel() don't touch a dead window
-        if (process.env['ELECTRON_RENDERER_URL']) win.loadURL(process.env['ELECTRON_RENDERER_URL']);
+        // SECURITY: only honor the dev-server URL in development. In a packaged app, ELECTRON_RENDERER_URL
+        // must NOT be able to point the privileged (window.beacon-exposed) renderer at an arbitrary URL.
+        const devUrl = process.env['ELECTRON_RENDERER_URL'];
+        if (!app.isPackaged && devUrl) win.loadURL(devUrl);
         else win.loadFile(join(__dirname, '../renderer/index.html'));
       }
       win.show();
@@ -64,7 +77,9 @@ else {
       if (quitting) return;
       quitting = true;
       e.preventDefault();
-      core.close().finally(() => { tray.destroy(); app.exit(0); });
+      // Catch so a failed final flush can't become an unhandled rejection while we exit anyway.
+      core.close().catch((err) => console.error('Beacon close error:', err))
+        .finally(() => { tray.destroy(); app.exit(0); });
     });
   });
 }

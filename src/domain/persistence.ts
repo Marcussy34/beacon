@@ -34,7 +34,9 @@ export function createDebouncedWriter(
     if (!pending) return inflight; // nothing new; await any in-progress write
     const snap = pending;
     pending = null;
-    inflight = inflight.then(() => saveSnapshot(path, snap));
+    // `.catch(() => {})` resets a previously-rejected chain so ONE failed write (e.g. transient
+    // EACCES) can't permanently poison the chain — every write still attempts the latest snapshot.
+    inflight = inflight.catch(() => {}).then(() => saveSnapshot(path, snap));
     return inflight;
   };
 
