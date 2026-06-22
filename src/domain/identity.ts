@@ -9,6 +9,15 @@ export function eventKey(raw: RawHookEvent): string {
   return `codex:${pid}:${start}:${root}:${tty}`;
 }
 
+// M1 → M2 HANDOFF: the three Codex-reconcile helpers below (parseRolloutMeta,
+// matchesRollout, reconcile) are unit-proven but NOT yet wired into any caller.
+// M2 must add the `~/.codex/sessions/.../rollout-*.jsonl` watcher that invokes
+// them, plus a Codex temp-id -> reconcile INTEGRATION test (M1's e2e covers
+// Claude only). Note: reconcile only changes the display `id`; the store map key
+// is `tempId`, which stays stable across reconcile — so markSeen/badge keep
+// working. Decide the id-vs-tempId lookup contract when wiring (id is currently
+// display-only; add an id->tempId index if M3 addresses sessions by id).
+
 /** Parse the first JSONL line of a Codex rollout file. Returns null unless it is session_meta. */
 export function parseRolloutMeta(firstLine: string): RolloutInfo | null {
   let obj: any;
