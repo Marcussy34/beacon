@@ -26,6 +26,12 @@ describe('detectRemote', () => {
   it('ssh', () => expect(detectRemote({ SSH_CONNECTION: '1.2.3.4 22 5.6.7.8 22' })).toBe('ssh'));
   it('tmux', () => expect(detectRemote({ TMUX: '/tmp/tmux-501/default,123,0' })).toBe('tmux'));
   it('vscode-remote', () => expect(detectRemote({ VSCODE_IPC_HOOK_CLI: '/x', REMOTE_CONTAINERS: 'true' })).toBe('vscode-remote'));
+  it('ssh via SSH_TTY', () => expect(detectRemote({ SSH_TTY: '/dev/ttys001' })).toBe('ssh'));
+  it('tmux via STY (screen)', () => expect(detectRemote({ STY: '12345.pts-0.host' })).toBe('tmux'));
+  it('not vscode-remote when only one of the two required vars is set', () => {
+    expect(detectRemote({ VSCODE_IPC_HOOK_CLI: '/x' })).toBe('none');
+    expect(detectRemote({ REMOTE_CONTAINERS: 'true' })).toBe('none');
+  });
   it('none', () => expect(detectRemote({})).toBe('none'));
 });
 
