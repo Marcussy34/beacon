@@ -14,18 +14,23 @@ else {
     const paths = appPaths(homedir());
     let win: BrowserWindow | null = null;
 
-    const core = await createBeaconCore({ paths, onChange: () => {
-      tray.setBadge(core.attentionCount());
-      win?.webContents.send('update', core.snapshot());
-    }});
-
+    // Tray is created BEFORE core so core's onChange can reference it without a temporal-dead-zone
+    // risk. `refresh` is a hoisted function declaration; it is only ever invoked after both `tray`
+    // and `core` are bound (the explicit call below, or via onChange which fires post-construction).
     const tray = createTray({
       iconPath: app.isPackaged
         ? join(process.resourcesPath, 'iconTemplate.png')
         : join(__dirname, '../../resources/iconTemplate.png'),
       onToggle: () => { if (win?.isVisible()) win.hide(); else showPanel(); },
     });
-    tray.setBadge(core.attentionCount());
+
+    const core = await createBeaconCore({ paths, onChange: () => refresh() });
+
+    function refresh(): void {
+      tray.setBadge(core.attentionCount());
+      win?.webContents.send('update', core.snapshot());
+    }
+    refresh(); // initial badge
 
     const handlers = createIpcHandlers(core, async (key) => {
       const s = core.store.get(key);
