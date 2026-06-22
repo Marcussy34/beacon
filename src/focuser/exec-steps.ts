@@ -10,7 +10,7 @@ export const TERMINAL_FOCUS_APPLESCRIPT = `on run argv
       repeat with t in tabs of w
         if tty of t is targetTty then
           set selected of t to true
-          set frontmost of w to true
+          set index of w to 1
           return "ok"
         end if
       end repeat

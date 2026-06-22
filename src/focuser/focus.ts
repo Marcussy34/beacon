@@ -70,6 +70,7 @@ export const systemRunner: Runner = (step: ExecStep) =>
       resolve({ ok: !err });
     });
     if (step.stdin !== undefined) {
-      child.stdin?.end(step.stdin);
+      // execFile opens stdin as a pipe by default, so it is non-null here.
+      child.stdin!.end(step.stdin, 'utf8');
     }
   });
