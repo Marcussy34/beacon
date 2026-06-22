@@ -9,7 +9,15 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
-    build: { rollupOptions: { input: { index: resolve('src/preload/index.ts') } } },
+    // Force CommonJS output (index.js, not index.mjs): a `sandbox: true` preload runs as plain
+    // JS without an ESM loader, so an ESM preload would silently fail to load and `window.beacon`
+    // would be undefined. CJS + the .js name also matches main's `../preload/index.js` reference.
+    build: {
+      rollupOptions: {
+        input: { index: resolve('src/preload/index.ts') },
+        output: { format: 'cjs', entryFileNames: '[name].js' },
+      },
+    },
   },
   renderer: {
     root: 'src/renderer',

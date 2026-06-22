@@ -29,4 +29,9 @@ describe('resolveHookCommand (packaged mode)', () => {
     expect(out).toContain('"/My App/Beacon"');
     expect(out).toContain('"/My App/Resources/beacon-hook.cjs"');
   });
+  it('throws (no silent broken command) when packaged mode is missing execPath/resourcesPath', () => {
+    expect(() => resolveHookCommand({ packaged: true })).toThrow(/required in packaged mode/);
+    expect(() => resolveHookCommand({ packaged: true, execPath: '/x' })).toThrow(/required in packaged mode/);
+    expect(() => resolveHookCommand({ packaged: true, resourcesPath: '/r' })).toThrow(/required in packaged mode/);
+  });
 });

@@ -32,4 +32,15 @@ describe('groupSessions', () => {
     expect(g.done.map(x => x.id)).toEqual(['c']);
     expect(g.closed.map(x => x.id)).toEqual(['d']);
   });
+
+  it('closed beats attention: a closed session with needs-you lands in closed, not needsYou', () => {
+    const s = (over: Partial<Session>): Session => ({ ...base, ...over });
+    const g = groupSessions([
+      s({ id: 'x', state: 'closed', attention: 'needs-you', lastEventAt: 3 }),
+      s({ id: 'y', state: 'closed', attention: 'done', lastEventAt: 9 }),
+    ]);
+    expect(g.needsYou).toEqual([]);
+    expect(g.done).toEqual([]);
+    expect(g.closed.map(x => x.id)).toEqual(['y', 'x']); // both closed, desc by lastEventAt
+  });
 });

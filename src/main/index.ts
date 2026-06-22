@@ -28,7 +28,9 @@ else {
 
     function refresh(): void {
       tray.setBadge(core.attentionCount());
-      win?.webContents.send('update', core.snapshot());
+      // Guard: `win` may be non-null but its webContents destroyed (user closed the window);
+      // sending to a destroyed webContents throws.
+      if (win && !win.isDestroyed()) win.webContents.send('update', core.snapshot());
     }
     refresh(); // initial badge
 
@@ -48,12 +50,21 @@ else {
           width: 680, height: 520, show: false,
           webPreferences: { preload: join(__dirname, '../preload/index.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
         });
+        win.on('closed', () => { win = null; }); // reset so refresh()/showPanel() don't touch a dead window
         if (process.env['ELECTRON_RENDERER_URL']) win.loadURL(process.env['ELECTRON_RENDERER_URL']);
         else win.loadFile(join(__dirname, '../renderer/index.html'));
       }
       win.show();
     }
 
-    app.on('will-quit', () => { void core.close(); tray.destroy(); });
+    // Await the final debounced state write before the process exits (core.close() flushes the
+    // writer); preventDefault + app.exit avoids losing the most recent state on quit.
+    let quitting = false;
+    app.on('will-quit', (e) => {
+      if (quitting) return;
+      quitting = true;
+      e.preventDefault();
+      core.close().finally(() => { tray.destroy(); app.exit(0); });
+    });
   });
 }
