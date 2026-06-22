@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import type { Session } from '../domain/types';
 import type { FocusCommand, FocusResult, Runner, ExecStep } from './types';
 import { buildFocusCommand } from './build-command';
@@ -60,3 +61,15 @@ export async function focusSession(session: Session, run: Runner): Promise<Focus
     };
   }
 }
+
+// Real runner: runs the step via execFile, writing stdin if present.
+// Never throws — resolves { ok:false } on any error or non-zero exit. 5s timeout.
+export const systemRunner: Runner = (step: ExecStep) =>
+  new Promise((resolve) => {
+    const child = execFile(step.program, step.args, { timeout: 5000 }, (err) => {
+      resolve({ ok: !err });
+    });
+    if (step.stdin !== undefined) {
+      child.stdin?.end(step.stdin);
+    }
+  });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { focusSession } from '../../src/focuser/focus';
+import { focusSession, systemRunner } from '../../src/focuser/focus';
 import type { Session } from '../../src/domain/types';
 import type { ExecStep, Runner } from '../../src/focuser/types';
 
@@ -51,5 +51,16 @@ describe('focusSession', () => {
     const run: Runner = async () => { throw new Error('boom'); };
     const res = await focusSession(base, run);
     expect(res.ok).toBe(false);
+  });
+});
+
+describe('systemRunner', () => {
+  it('resolves { ok: false } for a non-existent program (never throws)', async () => {
+    const res = await systemRunner({ program: 'beacon-no-such-binary-xyz', args: [] });
+    expect(res.ok).toBe(false);
+  });
+  it('resolves { ok: true } for a trivially successful command', async () => {
+    const res = await systemRunner({ program: 'true', args: [] });
+    expect(res.ok).toBe(true);
   });
 });
