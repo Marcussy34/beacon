@@ -40,6 +40,14 @@ These are the runtime behaviors that cannot be unit-tested (they need a real mac
 - [ ] Tool + host icons, repo name, relative time all render correctly.
 - [ ] Packaged-app hook invocation: after installing from the packaged `.app`, the hook command uses the `ELECTRON_RUN_AS_NODE` form and still fires (reinstalling from dev→packaged does NOT double-add — the installer replaces the stale entry).
 
+## M3c — UI polish (dev: `npm run dev`)
+- [ ] Panel is a translucent dark frosted card (rounded, blurred) — not an opaque rectangle.
+- [ ] Sessions are grouped under **Needs you / Working / Done / Recently closed**; empty groups are hidden.
+- [ ] Each row shows: a status dot, a tool icon (Claude/Codex), repo name, a host icon (Terminal/VS Code/Cursor), relative time, a **Go to** button, and a **mark-seen** check when it needs attention.
+- [ ] A session running under a degraded host shows a small amber "degraded" badge.
+- [ ] Clicking **Go to** on a session whose window can't be focused shows a toast with the reason (e.g. reveal-in-Finder fallback).
+- [ ] Clicking the mark-seen check clears the dot and decrements the menu-bar badge.
+
 ## Notes
 - The packaged `.app` is UNSIGNED (local build). On first launch macOS Gatekeeper may require right-click → Open. Signing/notarization needs an Apple Developer ID (not set up).
 - Socket path is `~/Library/Application Support/Beacon/beacon.sock` (~60 bytes for this user — under the macOS ~104-byte limit). If a future user has a very long home path and sees no sessions, that's the documented `FIXME(socket-path)` in `src/core/app-paths.ts`.
