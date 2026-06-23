@@ -1,0 +1,41 @@
+---
+title: '"Go to" & terminal focus'
+---
+
+# "Go to" & exact-terminal focus
+
+Clicking **Go to** on a session brings the right window forward. What "right" means depends on where the
+session is running.
+
+## Per-host behavior
+
+- **Terminal.app** — focuses the exact tab whose tty matches the session, and brings the window forward.
+  Precise for plain local tabs.
+- **VS Code / Cursor** — brings the correct editor *window* (the one for that repo) forward.
+- **Remote / tmux / SSH** — the session is shown, but "Go to" degrades gracefully (see below).
+
+"Go to" also marks the session seen.
+
+## Exact integrated-terminal focus
+
+VS Code and Cursor can't normally target a specific integrated-terminal *tab* from the outside — Beacon can
+only raise the right window. The optional **Beacon Focus Helper** extension fixes that: it reveals the exact
+terminal tab your agent is running in.
+
+See the install guide:
+[`docs/EXTENSION-INSTALL.md`](https://github.com/Marcussy34/beacon/blob/main/docs/EXTENSION-INSTALL.md).
+
+## Graceful fallbacks
+
+When a session can't be focused directly — it's remote, the tty is unknown, the window is gone, or the
+editor CLI isn't installed — Beacon falls back:
+
+- **Local path** → reveals the repo's git root in Finder.
+- **Remote / non-local path** → copies the repo path to your clipboard.
+
+Either way you get a clear toast explaining what happened.
+
+<Callout type="warning">
+Terminal focus needs the macOS **Automation** permission. If you denied it on first run, grant it in
+**System Settings → Privacy & Security → Automation**.
+</Callout>

@@ -1,0 +1,85 @@
+---
+title: The panel & badge
+---
+
+# The panel & menu-bar badge
+
+Beacon has two surfaces: an **always-present menu-bar badge** and a **summonable floating panel**.
+
+## The menu-bar badge
+
+The menu-bar icon shows a colored dot and a count whenever any session needs your attention or has just
+finished — without you opening anything. It's the ambient signal that pulls your eye only when something
+actually changed.
+
+Click a session in the panel to **mark it seen**: the dot clears and the badge count drops.
+
+## The floating panel
+
+Press **⌘⇧Space** to toggle the panel (the shortcut is [configurable](/guides/configuration)). It's a
+persistent HUD that:
+
+- floats above other windows,
+- **follows you across every Space and display** (switch desktops with Ctrl+→ and it comes with you),
+- stays open until you dismiss it — via the shortcut again, **Esc**, or the in-panel close button.
+
+You can move it (drag the header) and resize it from the edges.
+
+## Session states
+
+Sessions are grouped by what they need from you:
+
+| State            | Meaning                                              |
+| ---------------- | ---------------------------------------------------- |
+| **Needs you**    | Waiting on a permission prompt or your input         |
+| **Working**      | Actively running a turn                              |
+| **Done**         | The turn finished — your move                        |
+| **Recently closed** | The session ended (kept briefly, then evicted)    |
+
+## Reading a session row
+
+Each row packs several signals into a small space. Here's what every icon means.
+
+### Status dot (far left, and on each section heading)
+
+The dot's color tells you the session's state; it matches the section it's grouped under.
+
+| Dot | Meaning |
+| --- | --- |
+| 🔴 Red | **Needs you** — waiting on a permission prompt or your input |
+| 🟢 Green | **Working** — actively running a turn |
+| 🔵 Blue | **Done** — the turn finished, your move |
+| ⚪ Gray | **Recently closed** — the session ended |
+
+A row's dot is **bright only while the session needs attention and you haven't seen it yet**. Once you
+mark it seen (or it needs nothing from you), the dot dims.
+
+### Tool icon (which agent)
+
+| Icon | Tool |
+| --- | --- |
+| ✦ sparkles | **Claude Code** |
+| `{ }` braces | **Codex** |
+
+### Host icon (where it's running)
+
+| Icon | Host |
+| --- | --- |
+| `</>` code | **VS Code** |
+| ▸ pointer | **Cursor** |
+| ▭ terminal | **Terminal.app** |
+| ? circle | **Unknown** — host couldn't be detected (often a remote or detached session) |
+
+### Badges & actions
+
+| Element | Meaning |
+| --- | --- |
+| ⚠️ **degraded** (amber badge) | "Go to" can't pinpoint the exact window — the session is remote/tmux/SSH or its tty is unknown, so it falls back to revealing or copying the path |
+| ✓ check button | **Mark seen** — clears the dot and decrements the menu-bar badge |
+| **Go to →** | Focus this session's window/tab (see [the next guide](/guides/go-to)) |
+
+The relative time on the right (`just now`, `2h`, …) is when Beacon last saw activity for that session.
+
+## Next
+
+See how **[Go to](/guides/go-to)** focuses the right window — and the exact terminal tab.

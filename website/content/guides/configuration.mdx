@@ -1,0 +1,23 @@
+---
+title: Configuration
+---
+
+# Configuration
+
+## The global shortcut
+
+Beacon's panel is summoned with **⌘⇧Space** by default. This is a global hotkey — it works from any app.
+
+The shortcut is configurable. Beacon persists your last working accelerator, so your choice survives
+restarts.
+
+## When a shortcut is already taken
+
+macOS lets only one app own a given global hotkey, and registration fails **silently** when the combo is
+already claimed. Beacon checks explicitly: if it couldn't register your shortcut, it surfaces a warning and
+asks you to pick another one.
+
+<Callout type="info">
+Even if the global shortcut can't be registered, the **menu-bar icon always works** — click it to toggle
+the panel.
+</Callout>

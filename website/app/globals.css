@@ -1,0 +1,5 @@
+/* Beacon accent (a warm beacon amber). Nextra reads these to tint links/active states. */
+:root {
+  --nextra-primary-hue: 35deg;
+  --nextra-primary-saturation: 95%;
+}

@@ -1,0 +1,39 @@
+---
+title: How it works
+---
+
+# How it works
+
+Beacon is a single Electron app made of small, independent pieces. Data flows one direction: from your
+agents' hooks into Beacon, and out to the menu bar and panel.
+
+```
+  Claude Code hooks ─┐
+                     ├─► beacon-hook ──(0600 Unix socket)──► Collector ─► Session Store + State Machine
+  Codex hooks ───────┘   (env + stdin)                      (main proc)        │
+                                                                                ├─► Tray (menu-bar badge)
+                                                                                └─► Panel (renderer/IPC) ─► Focuser
+```
+
+1. **A hook fires** when an agent starts, works, needs input, or finishes.
+2. **`beacon-hook`** captures the repo, git root, tty, and host (Terminal/VS Code/Cursor), then
+   fire-and-forgets to Beacon's socket. It never slows your CLI down and exits cleanly even when Beacon
+   isn't running.
+3. **The collector** validates each event and hands it to the store. The state machine updates that
+   session's status.
+4. **The menu-bar badge** updates and the **panel** refreshes live over IPC.
+5. **Go to** dispatches a per-host focus strategy (AppleScript for Terminal, `open -b` plus the companion
+   extension for editors), with graceful fallbacks when a session is remote or its window is gone.
+
+## Why a Unix socket
+
+The collector listens on a `0600` Unix domain socket — scoped to your user — rather than an open network
+port that any local process could bind or forge events on. Payload fields are never shell-interpolated; all
+external-command arguments are passed discretely and escaped.
+
+## Identity
+
+- **Claude Code** sessions key on the documented stable `session_id`.
+- **Codex** has no documented stable hook session id, so sessions are tracked best-effort (keyed on the
+  long-lived `codex` ancestor process) and reconciled later from Codex's rollout files. See
+  [Troubleshooting](/reference/troubleshooting) for the `--ephemeral` caveat.

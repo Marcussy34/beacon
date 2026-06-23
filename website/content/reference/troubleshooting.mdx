@@ -1,0 +1,40 @@
+---
+title: Troubleshooting
+---
+
+# Troubleshooting
+
+## "Go to" doesn't focus my terminal
+
+Terminal focus uses macOS **Automation** (Apple Events). If you denied the prompt on first run, grant it in
+**System Settings → Privacy & Security → Automation**, then try again. Without it, "Go to" falls back to
+revealing the repo in Finder.
+
+## A session shows but "Go to" only copies the path
+
+That session is **remote or detached** (SSH, VS Code Remote, a devcontainer, or tmux). Its tty and paths
+aren't local, so Beacon can't focus a local window — it copies the repo path instead. This is expected.
+
+## My Codex sessions look merged or missing
+
+Codex doesn't expose a stable session id in its hook payloads, so Beacon tracks them best-effort and
+reconciles from rollout files. Sessions started with `codex --ephemeral` have no rollout to reconcile
+against and run in a degraded mode.
+
+## A hook error mentions `dist/hook/beacon-hook.cjs`
+
+This only happens in a **source/dev setup**. Beacon's installed hooks point at the built hook file; if that
+file is missing (for example after clearing build output), Claude Code/Codex can't run it. Rebuild it from
+the repo root:
+
+```bash
+npm run build
+```
+
+The hook is regenerated in seconds and the error disappears. Installed `.app` builds don't have this
+fragility — their hooks point at the file bundled inside the app.
+
+## The panel doesn't follow me across Spaces
+
+Make sure you're on the latest build and have fully restarted Beacon. The panel is designed to float across
+every Space and display; a stale instance from before an update can still hold old window behavior.

@@ -8,6 +8,8 @@ See every **Claude Code** and **Codex CLI** session across all your repos — an
 
 ![Beacon demo: many agents running, Beacon showing which one needs attention, then jumping to it](docs/media/demo.gif)
 
+📖 **[Documentation](website/)** — full docs site (Nextra); a hosted URL goes here after the first Vercel deploy.
+
 </div>
 
 ---

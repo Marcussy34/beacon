@@ -8,3 +8,5 @@ out/
 *.vsix
 # Build-process docs (plans, research, checklists) stay local — not in the public repo.
 docs/superpowers/
+# Docs site (Nextra) build output
+website/.next/

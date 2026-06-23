@@ -1,0 +1,45 @@
+---
+title: Installation
+---
+
+# Installation
+
+## Requirements
+
+- **macOS** (Apple Silicon or Intel). Beacon is macOS-only.
+- **[Claude Code](https://code.claude.com)** and/or **[Codex CLI](https://developers.openai.com/codex)** —
+  Beacon watches whichever you have installed.
+
+## Homebrew (recommended)
+
+Once the first public release is out, install with:
+
+```bash
+brew install --cask marcussy34/beacon/beacon
+```
+
+## Direct download
+
+Grab the latest `Beacon-<version>-<arch>.dmg` from the
+[Releases page](https://github.com/Marcussy34/beacon/releases), open it, and drag **Beacon** into your
+Applications folder.
+
+## Build from source
+
+```bash
+git clone https://github.com/Marcussy34/beacon.git
+cd beacon
+npm install
+
+npm run dev          # run Beacon in development
+npm run pack:mac     # build an unsigned local .app for testing
+```
+
+<Callout type="info">
+The first signed public release is in progress. Until it ships, building from source is the way to try
+Beacon today.
+</Callout>
+
+## Next
+
+Continue to **[First-run setup](/get-started/first-run)** to connect Beacon to your agents.

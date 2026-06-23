@@ -1,0 +1,40 @@
+---
+title: First-run setup
+---
+
+# First-run setup
+
+Beacon is a **menu-bar app — it has no Dock icon.** After launching, look for its icon in the menu bar.
+
+On first launch, Beacon does three things:
+
+<Steps>
+
+### Installs its hooks
+
+Beacon merges its hook entries into `~/.claude/settings.json` and your Codex config (`~/.codex`). This is
+how it learns about session events. Your existing config is **merged into, never overwritten** — the write
+is atomic and a backup is taken first.
+
+### Asks for macOS Automation permission
+
+The first time you use **Go to**, macOS prompts for Automation permission so Beacon can focus your terminal
+or editor via AppleScript. If you deny it, Beacon still works — "Go to" just falls back to revealing the
+repo in Finder.
+
+### (Codex only) Approve the hooks
+
+Codex requires a trust review for any hook. Run Codex's `/hooks` command and approve Beacon's entries.
+
+</Steps>
+
+That's it. Start a `claude` or `codex` session anywhere and watch it appear, then press **⌘⇧Space** to open
+the panel.
+
+<Callout type="info">
+One global install covers **all** your repos — there is no per-project setup.
+</Callout>
+
+## Next
+
+Learn how to use the **[panel and menu-bar badge](/guides/panel)**.

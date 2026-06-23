@@ -1,0 +1,22 @@
+---
+title: Privacy
+---
+
+# Privacy — what Beacon touches
+
+Beacon runs on your machine and watches your dev environment, so here is exactly what it does — no
+surprises.
+
+- **Reads** lifecycle events from Claude Code / Codex hooks: repo path, git root, terminal/editor identity,
+  and the session's state. Nothing leaves your machine.
+- **Writes** only to its own hook entries in `~/.claude/settings.json` and `~/.codex` (merged, backed up,
+  marker-tagged, and cleanly uninstallable) plus its own app-support data.
+- **Local-only.** No network calls, no telemetry, no remote sync. The collector listens on a `0600` Unix
+  socket scoped to your user — not an open network port.
+- **Observes, never controls.** Beacon does not send prompts to your agents or run commands on your behalf
+  beyond focusing a window when you click "Go to".
+- **Does not read your code or transcripts.** It keys off event metadata (paths, state), not file contents.
+
+<Callout type="info">
+Uninstalling removes only the hook entries that carry Beacon's marker — your other hooks are left untouched.
+</Callout>
