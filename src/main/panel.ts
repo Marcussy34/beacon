@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, type BrowserWindowConstructorOptions } from 'electron';
 
 export const PANEL_SIZE = { width: 680, height: 520 } as const;
 
@@ -43,21 +43,34 @@ export function applyHudWindowBehavior(win: HudWindow): void {
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
 }
 
+// BrowserWindow options for the panel. type:'panel' (an NSPanel) is LOAD-BEARING on macOS and is the
+// real Space-jump fix: a normal NSWindow's show()/focus() call [NSApp activateIgnoringOtherApps:YES],
+// which activates the whole app and switches macOS to the window's "home" Space — so summoning the
+// panel from another Space yanked the user back to wherever it was last shown (a fullscreen video's
+// Space, or Desktop 1). For a panel, Electron SKIPS that activation: the window takes key focus via
+// makeKeyAndOrderFront without activating the app (exactly how Spotlight behaves), so it opens on the
+// CURRENT Space and never drags the user away. setVisibleOnAllWorkspaces only controls where the
+// window *appears* — not activation — which is why it looked visible everywhere yet still pulled focus.
+export function panelWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
+  return {
+    ...PANEL_SIZE,
+    show: false, frame: false, transparent: true,
+    type: 'panel', // NSPanel — keyboard focus without app activation, so summoning never switches Spaces
+    // Movable (header is a drag region in the renderer) + resizable from the edges. minWidth/Height
+    // keep it usable; maximize is off (it's a HUD, not a document window).
+    resizable: true, maximizable: false, minWidth: 380, minHeight: 260,
+    fullscreenable: false, skipTaskbar: true, focusable: true, alwaysOnTop: true,
+    webPreferences: { preload: preloadPath, contextIsolation: true, nodeIntegration: false, sandbox: true },
+  };
+}
+
 export function createPanel(opts: {
   preloadPath: string; loadDevUrl?: string; loadFile: string; onHidden?: () => void;
 }): Panel {
   let win: BrowserWindow | null = null;
 
   function build(): BrowserWindow {
-    const w = new BrowserWindow({
-      ...PANEL_SIZE,
-      show: false, frame: false, transparent: true,
-      // Movable (header is a drag region in the renderer) + resizable from the edges. minWidth/Height
-      // keep it usable; maximize is off (it's a HUD, not a document window).
-      resizable: true, maximizable: false, minWidth: 380, minHeight: 260,
-      fullscreenable: false, skipTaskbar: true, focusable: true, alwaysOnTop: true,
-      webPreferences: { preload: opts.preloadPath, contextIsolation: true, nodeIntegration: false, sandbox: true },
-    });
+    const w = new BrowserWindow(panelWindowOptions(opts.preloadPath));
     // Float over all Spaces + fullscreen apps. Order matters — see applyHudWindowBehavior.
     applyHudWindowBehavior(w);
     if (opts.loadDevUrl) w.loadURL(opts.loadDevUrl); else w.loadFile(opts.loadFile);
@@ -79,8 +92,10 @@ export function createPanel(opts: {
   function show(): void {
     if (!win) win = build();
     positionOnActiveDisplay(win);
+    // type:'panel' makes win.show() key the panel WITHOUT activating the app, so it opens on the
+    // Space the user is currently on. Do NOT call app.focus({steal:true}) here: app activation
+    // ignores the panel exemption and switches macOS to the window's home Space — the yank bug.
     win.show();
-    app.focus({ steal: true }); // activating: take focus like Spotlight/ChatGPT
   }
   function hide(): void { if (win && win.isVisible()) { win.hide(); opts.onHidden?.(); } }
   function toggle(): void { if (win && win.isVisible()) hide(); else show(); }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { panelPosition, PANEL_SIZE, applyHudWindowBehavior, type HudWindow } from '../../src/main/panel';
+import { panelPosition, PANEL_SIZE, applyHudWindowBehavior, panelWindowOptions, type HudWindow } from '../../src/main/panel';
 
 describe('panelPosition', () => {
   it('centers horizontally and sits near the top of the work area', () => {
@@ -50,5 +50,24 @@ describe('applyHudWindowBehavior', () => {
       true,
       { visibleOnFullScreen: true, skipTransformProcessType: true },
     ]);
+  });
+});
+
+describe('panelWindowOptions', () => {
+  it('creates an NSPanel (type:panel) so show()/focus() never yank the user to another Space', () => {
+    // THE Space-jump fix. A normal NSWindow's show()/focus() call activateIgnoringOtherApps:YES,
+    // which activates the app and switches macOS to the window's "home" Space. type:'panel' makes
+    // Electron skip that activation (Spotlight-style key focus), so the panel opens on the CURRENT
+    // Space instead of dragging the user back to where it was last shown.
+    expect(panelWindowOptions('/preload.js').type).toBe('panel');
+  });
+
+  it('stays a borderless, non-fullscreening HUD off the taskbar', () => {
+    const o = panelWindowOptions('/preload.js');
+    expect(o.show).toBe(false);
+    expect(o.frame).toBe(false);
+    expect(o.fullscreenable).toBe(false); // also keeps FullScreenAuxiliary → floats over fullscreen
+    expect(o.skipTaskbar).toBe(true);
+    expect(o.webPreferences?.preload).toBe('/preload.js');
   });
 });
