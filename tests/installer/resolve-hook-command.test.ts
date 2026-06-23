@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveHookCommand } from '../../src/installer/resolve-hook-command';
+import { defaultTargets } from '../../src/installer/install';
 
 describe('resolveHookCommand', () => {
   it('builds "<node> \"<root>/dist/hook/beacon-hook.cjs\"" with explicit opts', () => {
@@ -33,5 +34,25 @@ describe('resolveHookCommand (packaged mode)', () => {
     expect(() => resolveHookCommand({ packaged: true })).toThrow(/required in packaged mode/);
     expect(() => resolveHookCommand({ packaged: true, execPath: '/x' })).toThrow(/required in packaged mode/);
     expect(() => resolveHookCommand({ packaged: true, resourcesPath: '/r' })).toThrow(/required in packaged mode/);
+  });
+});
+
+describe('packaged invocation wiring (M3c)', () => {
+  it('defaultTargets embeds the packaged ELECTRON_RUN_AS_NODE command in every target', () => {
+    const invocation = resolveHookCommand({
+      packaged: true,
+      execPath: '/Applications/Beacon.app/Contents/MacOS/Beacon',
+      resourcesPath: '/Applications/Beacon.app/Contents/Resources',
+    });
+    expect(invocation).toContain('ELECTRON_RUN_AS_NODE=1');
+    expect(invocation).toContain('Contents/Resources/beacon-hook.cjs');
+
+    const targets = defaultTargets(invocation);
+    expect(targets).toHaveLength(2); // claude + codex
+    for (const t of targets) {
+      const commands = t.specs.map((s) => s.command);
+      expect(commands.length).toBeGreaterThan(0);
+      for (const c of commands) expect(c).toContain('ELECTRON_RUN_AS_NODE=1');
+    }
   });
 });

@@ -48,6 +48,10 @@ These are the runtime behaviors that cannot be unit-tested (they need a real mac
 - [ ] Clicking **Go to** on a session whose window can't be focused shows a toast with the reason (e.g. reveal-in-Finder fallback).
 - [ ] Clicking the mark-seen check clears the dot and decrements the menu-bar badge.
 
+## M3c — Packaged `.app` (build: `npm run pack:mac`, launch dist/mac-arm64/Beacon.app)
+- [ ] First launch of the packaged app installs hooks whose command begins with `ELECTRON_RUN_AS_NODE=1` and points at `…/Beacon.app/Contents/Resources/beacon-hook.cjs` (inspect `~/.claude/settings.json` and `~/.codex/hooks.json`).
+- [ ] A real Claude/Codex session started AFTER launching the packaged app appears in the panel (proves the packaged hook command actually fires).
+
 ## Notes
 - The packaged `.app` is UNSIGNED (local build). On first launch macOS Gatekeeper may require right-click → Open. Signing/notarization needs an Apple Developer ID (not set up).
 - Socket path is `~/Library/Application Support/Beacon/beacon.sock` (~60 bytes for this user — under the macOS ~104-byte limit). If a future user has a very long home path and sees no sessions, that's the documented `FIXME(socket-path)` in `src/core/app-paths.ts`.

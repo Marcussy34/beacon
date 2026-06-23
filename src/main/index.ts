@@ -9,6 +9,7 @@ import { createPanel } from './panel';
 import { createShortcutManager, loadAccelerator } from './shortcut';
 import { createIpcHandlers } from './ipc';
 import { installHooks, defaultTargets } from '../installer/install';
+import { resolveHookCommand } from '../installer/resolve-hook-command';
 import { focusSession, systemRunner } from '../focuser/focus';
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
@@ -80,12 +81,20 @@ else {
     if (!res.ok) console.warn('[beacon]', shortcut.lastError(), '— summon via the menu-bar icon instead.');
 
     // First run: install Beacon's hooks (idempotent merge — safe even if already installed manually).
-    // TODO(M3c): in a packaged build, pass resolveHookCommand({ packaged, execPath, resourcesPath }) so
-    // the installed command uses the bundled binary instead of the dev `node dist/...` invocation.
+    // In a packaged .app the dev `node dist/...` path resolves into the asar and breaks, so use the
+    // bundled-binary invocation. The installer's tool+event+marker idempotency makes the dev→packaged
+    // switch a safe replace (no double-add).
     const installedFlag = join(paths.dataDir, '.installed');
     if (!existsSync(installedFlag)) {
       try {
-        const { trustMessage } = installHooks(defaultTargets());
+        const targets = app.isPackaged
+          ? defaultTargets(resolveHookCommand({
+              packaged: true,
+              execPath: process.execPath,
+              resourcesPath: process.resourcesPath,
+            }))
+          : defaultTargets(); // dev: `node "<root>/dist/hook/beacon-hook.cjs"`
+        const { trustMessage } = installHooks(targets);
         console.log('Beacon: installed hooks on first run.', trustMessage);
         writeFileSync(installedFlag, new Date().toISOString(), 'utf8');
       } catch (err) {
