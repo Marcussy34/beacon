@@ -22,6 +22,27 @@ export interface Panel {
   isVisible(): boolean; destroy(): void;
 }
 
+// Minimal surface of the two macOS window APIs that decide the panel's Space behavior.
+export interface HudWindow {
+  setAlwaysOnTop(flag: boolean, level: 'screen-saver'): void;
+  setVisibleOnAllWorkspaces(
+    visible: boolean,
+    options: { visibleOnFullScreen: boolean; skipTransformProcessType: boolean },
+  ): void;
+}
+
+// Makes the panel a persistent HUD that floats over fullscreen apps AND follows the user across
+// every Space. ORDER IS LOAD-BEARING: setAlwaysOnTop must run FIRST, then setVisibleOnAllWorkspaces.
+// On macOS, setAlwaysOnTop re-applies the window's collectionBehavior when it sets the window level,
+// which CLOBBERS the canJoinAllSpaces bit. If setVisibleOnAllWorkspaces runs first (then is clobbered),
+// the panel gets pinned to the Space it was opened on — it won't follow you across Spaces, and
+// re-showing it yanks you back to that origin Space. Applying all-spaces LAST keeps the bit intact.
+// skipTransformProcessType: the app is already an accessory/LSUIElement app (app.dock.hide()).
+export function applyHudWindowBehavior(win: HudWindow): void {
+  win.setAlwaysOnTop(true, 'screen-saver');
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
+}
+
 export function createPanel(opts: {
   preloadPath: string; loadDevUrl?: string; loadFile: string; onHidden?: () => void;
 }): Panel {
@@ -37,9 +58,8 @@ export function createPanel(opts: {
       fullscreenable: false, skipTaskbar: true, focusable: true, alwaysOnTop: true,
       webPreferences: { preload: opts.preloadPath, contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
-    // Float over all Spaces + fullscreen apps; skipTransformProcessType because we are an LSUIElement app.
-    w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
-    w.setAlwaysOnTop(true, 'screen-saver');
+    // Float over all Spaces + fullscreen apps. Order matters — see applyHudWindowBehavior.
+    applyHudWindowBehavior(w);
     if (opts.loadDevUrl) w.loadURL(opts.loadDevUrl); else w.loadFile(opts.loadFile);
     w.on('closed', () => { win = null; });
     // NOTE: intentionally NO hide-on-blur. Beacon's panel is a PERSISTENT HUD — once summoned it stays

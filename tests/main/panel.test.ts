@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { panelPosition, PANEL_SIZE } from '../../src/main/panel';
+import { panelPosition, PANEL_SIZE, applyHudWindowBehavior, type HudWindow } from '../../src/main/panel';
 
 describe('panelPosition', () => {
   it('centers horizontally and sits near the top of the work area', () => {
@@ -19,5 +19,36 @@ describe('panelPosition', () => {
     const pos = panelPosition(wa, PANEL_SIZE);
     expect(pos.x).toBeGreaterThanOrEqual(0);
     expect(pos.y).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('applyHudWindowBehavior', () => {
+  // Records the order + args of the two macOS Space-behavior calls.
+  function recorder(): { win: HudWindow; calls: Array<{ fn: string; args: unknown[] }> } {
+    const calls: Array<{ fn: string; args: unknown[] }> = [];
+    const win: HudWindow = {
+      setAlwaysOnTop: (flag, level) => { calls.push({ fn: 'setAlwaysOnTop', args: [flag, level] }); },
+      setVisibleOnAllWorkspaces: (visible, options) => {
+        calls.push({ fn: 'setVisibleOnAllWorkspaces', args: [visible, options] });
+      },
+    };
+    return { win, calls };
+  }
+
+  it('calls setAlwaysOnTop BEFORE setVisibleOnAllWorkspaces (so canJoinAllSpaces is not clobbered)', () => {
+    const { win, calls } = recorder();
+    applyHudWindowBehavior(win);
+    // This is the bug fix: the reverse order pins the panel to its origin Space.
+    expect(calls.map((c) => c.fn)).toEqual(['setAlwaysOnTop', 'setVisibleOnAllWorkspaces']);
+  });
+
+  it('uses the screen-saver level and the all-spaces options (over fullscreen, no process-type flicker)', () => {
+    const { win, calls } = recorder();
+    applyHudWindowBehavior(win);
+    expect(calls[0]!.args).toEqual([true, 'screen-saver']);
+    expect(calls[1]!.args).toEqual([
+      true,
+      { visibleOnFullScreen: true, skipTransformProcessType: true },
+    ]);
   });
 });
