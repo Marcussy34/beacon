@@ -107,7 +107,7 @@ Single Electron app (TypeScript). Six small, independently-testable units:
 - **All-Spaces / fullscreen / always-on-top (correct API):**
   - `win.setAlwaysOnTop(true, "screen-saver")`
   - `win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })`
-- **Focus model (activating):** summon with `show()` (takes focus, like ChatGPT). Dismiss on **blur** and on **Esc**; supports arrow-key navigation and type-to-filter. Accepted cost: briefly deactivates the previously-active app (ChatGPT behaves identically).
+- **Focus model — REVISED (persistent HUD, per user decision 2026-06-23):** summon with `show()` (takes focus). The panel then **stays visible** across every Space/display and over other apps; it does **NOT** hide on blur. It is **movable** (the header is a `-webkit-app-region: drag` handle) and **resizable** (`resizable:true`, `minWidth/Height`). Dismiss only via the global shortcut, **Esc**, or the in-panel **close (X)** button. (The original "ChatGPT-style hide-on-blur" launcher model was dropped: it made the panel flash-and-vanish on a Space switch and disappear on any click elsewhere — the opposite of the always-on-screen behavior the user wants.)
 - ⚠️ Fullscreen + Stage Manager behavior must be confirmed in the E2E checklist — known area of macOS quirks.
 - Global shortcut **⌘⇧Space** toggles show/hide (configurable). See §4.7 for conflict handling.
 - Layout: sessions grouped — **Needs you** / **Working** / **Done** / **Recently closed**. Each row: status dot (🔴 needs-you / 🟢 working / ✅ done), repo name, tool icon (Claude/Codex), host icon (Terminal/VS Code/Cursor), a "degraded" marker when applicable, relative time, and a **Go to** button.
