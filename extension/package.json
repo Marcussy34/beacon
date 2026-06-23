@@ -1,0 +1,26 @@
+{
+  "name": "beacon-focus",
+  "displayName": "Beacon Focus Helper",
+  "description": "Lets Beacon focus the exact integrated terminal for a Claude Code / Codex session.",
+  "version": "0.0.1",
+  "publisher": "beacon",
+  "private": true,
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/predictefy/beacon" },
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onUri"],
+  "main": "./out/extension.js",
+  "contributes": {},
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.6.2"
+  }
+}
