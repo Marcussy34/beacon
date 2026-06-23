@@ -26,11 +26,13 @@ declare global {
 
 const EMPTY: Snap = { version: 1, sessions: [] };
 
-// Group order + heading + status-dot color. Keys match GroupedSessions.
+// Display order + heading + status-dot color. Keys match GroupedSessions.
+// Needs-you stays pinned on top (urgent — the menu-bar badge fires for it); the rest run
+// Done → Working → Recently closed per request.
 const GROUPS: ReadonlyArray<{ key: keyof GroupedSessions; label: string; dot: string }> = [
   { key: 'needsYou', label: 'Needs you', dot: 'bg-red-500' },
-  { key: 'working', label: 'Working', dot: 'bg-emerald-500' },
   { key: 'done', label: 'Done', dot: 'bg-sky-500' },
+  { key: 'working', label: 'Working', dot: 'bg-emerald-500' },
   { key: 'closed', label: 'Recently closed', dot: 'bg-zinc-500' },
 ];
 
@@ -99,9 +101,11 @@ export function App() {
   const groups = groupSessions(snap.sessions);
 
   return (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-zinc-900/80 p-3 text-zinc-100 backdrop-blur-md">
-      {/* The header is the drag handle for the frameless window (app-drag); the close button opts out. */}
-      <header className="app-drag flex items-center justify-between gap-2 px-1">
+    // The whole card is the drag handle (app-drag) so the entire band above the first group
+    // moves the window; the scrollable list and the close button opt out (app-no-drag) so
+    // scroll + clicks still register. bg .95 keeps the card near-solid (ChatGPT-style frost).
+    <div className="app-drag flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-zinc-900/98 p-3 text-zinc-100 backdrop-blur-xl">
+      <header className="flex items-center justify-between gap-2 px-1">
         <span className="text-sm font-semibold">Beacon</span>
         <div className="flex items-center gap-2">
           <span className="text-xs text-zinc-500">{snap.sessions.length} session{snap.sessions.length === 1 ? '' : 's'}</span>
@@ -113,7 +117,7 @@ export function App() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pr-1">
+      <div className="app-no-drag beacon-scroll flex-1 overflow-y-auto pr-1">
         {snap.sessions.length === 0 && (
           <p className="px-2 py-8 text-center text-sm text-zinc-500">No active sessions.</p>
         )}
