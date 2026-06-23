@@ -13,13 +13,18 @@ describe('buildFocusCommand', () => {
   it('terminal host with tty (precise) -> terminal-app', () => {
     expect(buildFocusCommand(base)).toEqual({ kind: 'terminal-app', tty: '/dev/ttys003' });
   });
-  it('vscode host (precise) -> editor code + VS Code bundle', () => {
-    expect(buildFocusCommand({ ...base, host: 'vscode', tty: undefined }))
-      .toEqual({ kind: 'editor', cli: 'code', gitRoot: '/Users/m/repo', bundleId: 'com.microsoft.VSCode' });
+  it('vscode host (precise) -> editor code + VS Code bundle + tty', () => {
+    expect(buildFocusCommand({ ...base, host: 'vscode', tty: '/dev/ttys154' }))
+      .toEqual({ kind: 'editor', cli: 'code', gitRoot: '/Users/m/repo', bundleId: 'com.microsoft.VSCode', tty: '/dev/ttys154' });
   });
-  it('cursor host (precise) -> editor cursor + Cursor bundle', () => {
-    expect(buildFocusCommand({ ...base, host: 'cursor', tty: undefined }))
-      .toEqual({ kind: 'editor', cli: 'cursor', gitRoot: '/Users/m/repo', bundleId: 'com.todesktop.230313mzl4w4u92' });
+  it('cursor host (precise) -> editor cursor + Cursor bundle + tty', () => {
+    expect(buildFocusCommand({ ...base, host: 'cursor', tty: '/dev/ttys154' }))
+      .toEqual({ kind: 'editor', cli: 'cursor', gitRoot: '/Users/m/repo', bundleId: 'com.todesktop.230313mzl4w4u92', tty: '/dev/ttys154' });
+  });
+  it('editor host without a tty omits tty', () => {
+    const cmd = buildFocusCommand({ ...base, host: 'vscode', tty: undefined });
+    expect(cmd).toMatchObject({ kind: 'editor', cli: 'code', gitRoot: '/Users/m/repo', bundleId: 'com.microsoft.VSCode' });
+    expect((cmd as { tty?: string }).tty).toBeUndefined();
   });
   it('degraded + local (remote none) -> reveal in Finder', () => {
     expect(buildFocusCommand({ ...base, gotoPrecision: 'degraded' }))

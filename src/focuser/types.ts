@@ -1,6 +1,6 @@
 export type FocusCommand =
   | { kind: 'terminal-app'; tty: string }
-  | { kind: 'editor'; cli: 'code' | 'cursor'; gitRoot: string; bundleId: string }
+  | { kind: 'editor'; cli: 'code' | 'cursor'; gitRoot: string; bundleId: string; tty?: string }
   | { kind: 'reveal'; path: string }
   | { kind: 'copy-path'; path: string };
 
@@ -8,6 +8,8 @@ export interface ExecStep {
   program: string;
   args: string[];
   stdin?: string;
+  // A failed `optional` step does not fail the run (best-effort, e.g. the editor focus URL).
+  optional?: boolean;
 }
 
 export interface FocusResult {

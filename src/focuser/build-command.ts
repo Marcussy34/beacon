@@ -21,10 +21,10 @@ export function buildFocusCommand(session: Session): FocusCommand {
     return { kind: 'terminal-app', tty: session.tty };
   }
   if (session.host === 'vscode') {
-    return { kind: 'editor', cli: 'code', gitRoot: path, bundleId: BUNDLE.vscode };
+    return { kind: 'editor', cli: 'code', gitRoot: path, bundleId: BUNDLE.vscode, tty: session.tty };
   }
   if (session.host === 'cursor') {
-    return { kind: 'editor', cli: 'cursor', gitRoot: path, bundleId: BUNDLE.cursor };
+    return { kind: 'editor', cli: 'cursor', gitRoot: path, bundleId: BUNDLE.cursor, tty: session.tty };
   }
   // Defensive: a precise session should always match a branch above. The only
   // way to reach here is a 'terminal' host with no tty — which M1's parser

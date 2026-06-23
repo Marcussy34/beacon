@@ -56,6 +56,26 @@ describe('focusSession', () => {
     const res = await focusSession(base, run);
     expect(res.ok).toBe(false);
   });
+
+  it('editor WITH tty runs open -b then the focus URL, and reports ok', async () => {
+    const { run, steps } = recordingRunner();
+    const res = await focusSession({ ...base, host: 'vscode', tty: '/dev/ttys009' }, run);
+    expect(res.ok).toBe(true);
+    expect(res.usedFallback).toBe(false);
+    expect(steps).toEqual([
+      { program: 'open', args: ['-b', 'com.microsoft.VSCode', '/Users/m/repo'] },
+      { program: 'open', args: ['vscode://beacon.beacon-focus/focus?tty=%2Fdev%2Fttys009'], optional: true },
+    ]);
+  });
+  it('a failing focus URL (optional) does NOT trigger the reveal fallback', async () => {
+    // Only the focus URL fails; the window was already focused by open -b.
+    const urlStepFails = (s: ExecStep) => s.args[0]?.startsWith('vscode://') === true;
+    const { run, steps } = recordingRunner(urlStepFails);
+    const res = await focusSession({ ...base, host: 'vscode', tty: '/dev/ttys009' }, run);
+    expect(res.ok).toBe(true);
+    expect(res.usedFallback).toBe(false);
+    expect(steps.some((s) => s.args[0] === '-R')).toBe(false); // no reveal fallback
+  });
 });
 
 describe('systemRunner', () => {

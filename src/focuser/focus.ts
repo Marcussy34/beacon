@@ -27,7 +27,7 @@ function focusAction(cmd: FocusCommand): string {
 async function runAll(steps: ExecStep[], run: Runner): Promise<boolean> {
   for (const step of steps) {
     const r = await run(step).catch(() => ({ ok: false }));
-    if (!r.ok) return false;
+    if (!r.ok && !step.optional) return false; // optional steps (e.g. the focus URL) are best-effort
   }
   return true;
 }
