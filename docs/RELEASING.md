@@ -105,4 +105,6 @@ npm run pack:mac
 
 - **App icon:** add `build/icon.icns` so the `.app`/DMG show a branded icon instead of the
   default Electron icon. (The menu-bar tray icon in `resources/` is separate and already set.)
-- **LICENSE:** pick and commit a license (see the README's License section).
+
+> For the full "zero → `brew install`" picture (including shipping an unsigned beta before the
+> signed release), see [HOMEBREW-DISTRIBUTION.md](./HOMEBREW-DISTRIBUTION.md).
