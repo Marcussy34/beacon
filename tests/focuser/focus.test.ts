@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { focusSession, systemRunner } from '../../src/focuser/focus';
+import { focusSession, systemRunner, focusExecPath } from '../../src/focuser/focus';
 import type { Session } from '../../src/domain/types';
 import type { ExecStep, Runner } from '../../src/focuser/types';
 
@@ -62,5 +62,23 @@ describe('systemRunner', () => {
   it('resolves { ok: true } for a trivially successful command', async () => {
     const res = await systemRunner({ program: 'true', args: [] });
     expect(res.ok).toBe(true);
+  });
+});
+
+describe('focusExecPath', () => {
+  it('prepends Homebrew + local bins and guarantees system bins', () => {
+    expect(focusExecPath('/usr/bin:/bin')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+  });
+  it('handles an undefined/empty PATH', () => {
+    expect(focusExecPath(undefined)).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+    expect(focusExecPath('')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+  });
+  it('does not duplicate dirs already present', () => {
+    expect(focusExecPath('/opt/homebrew/bin:/usr/bin')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+  });
+  it('preserves additional existing dirs in order, after the prepended bins', () => {
+    expect(focusExecPath('/Users/m/.local/bin:/usr/bin')).toBe(
+      '/opt/homebrew/bin:/usr/local/bin:/Users/m/.local/bin:/usr/bin:/bin',
+    );
   });
 });

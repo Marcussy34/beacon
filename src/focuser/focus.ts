@@ -62,13 +62,28 @@ export async function focusSession(session: Session, run: Runner): Promise<Focus
   }
 }
 
+// A Finder-launched .app inherits a minimal PATH (no /opt/homebrew/bin, /usr/local/bin), so
+// execFile('code'|'cursor') can't find the editor CLI. Prepend the common Homebrew/local bins and
+// guarantee the system bins, preserving any other inherited entries in between.
+export function focusExecPath(currentPath: string | undefined): string {
+  const prepend = ['/opt/homebrew/bin', '/usr/local/bin'];
+  const system = ['/usr/bin', '/bin'];
+  const existing = (currentPath ?? '').split(':').filter(Boolean);
+  const ordered = [...prepend, ...existing, ...system];
+  const seen = new Set<string>();
+  return ordered.filter((p) => (seen.has(p) ? false : (seen.add(p), true))).join(':');
+}
+
 // Real runner: runs the step via execFile, writing stdin if present.
 // Never throws — resolves { ok:false } on any error or non-zero exit. 5s timeout.
 export const systemRunner: Runner = (step: ExecStep) =>
   new Promise((resolve) => {
-    const child = execFile(step.program, step.args, { timeout: 5000 }, (err) => {
-      resolve({ ok: !err });
-    });
+    const child = execFile(
+      step.program,
+      step.args,
+      { timeout: 5000, env: { ...process.env, PATH: focusExecPath(process.env['PATH']) } },
+      (err) => { resolve({ ok: !err }); },
+    );
     if (step.stdin !== undefined) {
       // execFile opens stdin as a pipe by default, so it is non-null here.
       child.stdin!.end(step.stdin, 'utf8');
