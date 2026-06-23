@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Code2, MousePointer2, SquareTerminal, CircleHelp,
+  SquareTerminal, CircleHelp,
   AlertTriangle, ArrowRight, Check, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ declare global {
       getSnapshot(): Promise<Snap>;
       markSeen(tempId: string): Promise<void>;
       goto(tempId: string): Promise<{ ok: boolean; message: string }>;
+      dismiss(tempId: string): Promise<void>;
       hide(): Promise<void>;
       onUpdate(cb: (s: Snap) => void): () => void;
     };
@@ -54,6 +55,22 @@ function OpenAIMark({ className, label }: { className?: string; label?: string }
   );
 }
 
+function VSCodeMark({ className, label }: { className?: string; label?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" role="img" aria-label={label}>
+      <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z" />
+    </svg>
+  );
+}
+
+function CursorMark({ className, label }: { className?: string; label?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" role="img" aria-label={label}>
+      <path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" />
+    </svg>
+  );
+}
+
 function ToolIcon({ tool }: { tool: Session['tool'] }) {
   const cls = 'h-3.5 w-3.5 text-zinc-400';
   return tool === 'codex'
@@ -62,11 +79,12 @@ function ToolIcon({ tool }: { tool: Session['tool'] }) {
 }
 
 function HostIcon({ host }: { host: Session['host'] }) {
-  const Icon =
-    host === 'vscode' ? Code2 :
-    host === 'cursor' ? MousePointer2 :
-    host === 'terminal' ? SquareTerminal : CircleHelp;
-  return <Icon className="h-3.5 w-3.5 text-zinc-400" aria-label={host} />;
+  const cls = 'h-3.5 w-3.5 text-zinc-400';
+  // VS Code & Cursor get their real brand marks; Terminal.app / unknown stay on Lucide glyphs.
+  if (host === 'vscode') return <VSCodeMark className={cls} label="vscode" />;
+  if (host === 'cursor') return <CursorMark className={cls} label="cursor" />;
+  const Icon = host === 'terminal' ? SquareTerminal : CircleHelp;
+  return <Icon className={cls} aria-label={host} />;
 }
 
 function Row({ session, dot, onToast }: {
@@ -78,7 +96,7 @@ function Row({ session, dot, onToast }: {
     if (!res.ok) onToast(res.message);
   };
   return (
-    <li className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
+    <li className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
       <span className={`h-2 w-2 shrink-0 rounded-full ${showSeen ? dot : 'bg-zinc-700'}`} />
       <ToolIcon tool={session.tool} />
       <span className="truncate text-sm text-zinc-100">{session.repoName}</span>
@@ -99,6 +117,11 @@ function Row({ session, dot, onToast }: {
       )}
       <Button variant="secondary" size="sm" onClick={go}>
         Go to<ArrowRight className="h-3 w-3" />
+      </Button>
+      <Button variant="ghost" size="icon" aria-label="Dismiss"
+        className="app-no-drag h-6 w-6 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-200 group-hover:opacity-100"
+        onClick={() => window.beacon.dismiss(session.tempId)}>
+        <X className="h-3.5 w-3.5" />
       </Button>
     </li>
   );

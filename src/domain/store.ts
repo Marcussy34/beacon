@@ -81,10 +81,29 @@ export class SessionStore {
     this.map.clear();
   }
 
-  evictStale(now: number, ttlMs: number): void {
+  /** Remove one session by key (the per-row ×). Returns true if a session was removed. */
+  dismiss(key: string): boolean {
+    return this.map.delete(key);
+  }
+
+  /**
+   * Remove stale sessions. "Stale" = SILENT (no events) past a threshold AND not awaiting the user:
+   * unseen needs-you / unseen done are protected and never time-evicted. closed → closedTtlMs,
+   * everything else (working/started, or an acknowledged needs-you/done) → deadTtlMs.
+   * Returns true if anything was removed.
+   */
+  sweepStale(now: number, closedTtlMs: number, deadTtlMs: number): boolean {
+    let changed = false;
     for (const [k, s] of this.map) {
-      if (s.state === 'closed' && now - s.lastEventAt > ttlMs) this.map.delete(k);
+      if (this.isStale(s, now, closedTtlMs, deadTtlMs)) { this.map.delete(k); changed = true; }
     }
+    return changed;
+  }
+
+  private isStale(s: Session, now: number, closedTtlMs: number, deadTtlMs: number): boolean {
+    if (s.attention !== 'none' && !s.seen) return false; // awaiting you — protected
+    const silent = now - s.lastEventAt;
+    return s.state === 'closed' ? silent > closedTtlMs : silent > deadTtlMs;
   }
 
   attentionCount(): number {

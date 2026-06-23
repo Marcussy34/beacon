@@ -64,6 +64,7 @@ else {
     });
     ipcMain.handle('snapshot', () => handlers.snapshot());
     ipcMain.handle('markSeen', (_e, key: string) => handlers.markSeen(key));
+    ipcMain.handle('dismiss', (_e, key: string) => handlers.dismiss(key)); // per-row × + ages out stale rows
     ipcMain.handle('goto', (_e, key: string) => handlers.goto(key));
     ipcMain.handle('hide', () => panel.hide()); // in-panel close button
 

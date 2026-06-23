@@ -4,6 +4,7 @@ import type { SessionsSnapshot } from '../domain/store';
 export interface IpcHandlers {
   snapshot(): SessionsSnapshot;
   markSeen(key: string): void;
+  dismiss(key: string): void;
   goto(key: string): Promise<{ ok: boolean; message: string }>;
 }
 
@@ -15,6 +16,7 @@ export function createIpcHandlers(
   return {
     snapshot: () => core.snapshot(),
     markSeen: (key) => core.markSeen(key),
+    dismiss: (key) => core.dismiss(key),
     goto: async (key) => { core.markSeen(key); return focus(key); }, // "Go to" also marks seen (spec §4.6)
   };
 }

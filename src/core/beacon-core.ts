@@ -8,11 +8,19 @@ import { startRolloutWatcher } from '../collector/rollout-watcher';
 import type { SessionsSnapshot } from '../domain/store';
 import type { AppPaths } from './app-paths';
 
+// Staleness sweep: a session is "silent" when no hook events have arrived for it. The sweep
+// removes silent-past-threshold sessions (see store.sweepStale). Closed sessions drop after 1 h;
+// presumed-dead (working/started, or an acknowledged needs-you/done) after 3 h.
+const CLOSED_TTL_MS = 60 * 60 * 1000;
+const DEAD_TTL_MS = 3 * 60 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 60_000;
+
 export interface BeaconCore {
   store: SessionStore;
   snapshot(): SessionsSnapshot;
   attentionCount(): number;
   markSeen(key: string): void;
+  dismiss(key: string): void;
   close(): Promise<void>;
 }
 
@@ -42,12 +50,20 @@ export async function createBeaconCore(opts: {
     watcher = startRolloutWatcher(paths.codexSessionsDir, (info) => { if (store.reconcileCodex(info)) touched(); });
   }
 
+  // Periodic staleness sweep. unref so the timer never keeps the process (or a test runner) alive;
+  // Electron's main run loop keeps firing it. Only persist/refresh when something was actually removed.
+  const sweep = setInterval(() => {
+    if (store.sweepStale(Date.now(), CLOSED_TTL_MS, DEAD_TTL_MS)) touched();
+  }, SWEEP_INTERVAL_MS);
+  sweep.unref?.();
+
   return {
     store,
     snapshot: () => store.toJSON(),
     attentionCount: () => store.attentionCount(),
     markSeen: (key) => { store.markSeen(key); touched(); },
-    // stop watcher + collector, then flush any pending write
-    close: async () => { watcher?.close(); await collector.close(); await writer.flush(); },
+    dismiss: (key) => { store.dismiss(key); touched(); },
+    // stop sweep + watcher + collector, then flush any pending write
+    close: async () => { clearInterval(sweep); watcher?.close(); await collector.close(); await writer.flush(); },
   };
 }

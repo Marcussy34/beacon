@@ -30,13 +30,50 @@ describe('SessionStore', () => {
     expect(s.get('a')!.attention).toBe('none');
     expect(s.attentionCount()).toBe(0);
   });
-  it('evictStale removes closed sessions past the ttl only', () => {
+  const CLOSED = 60 * 60 * 1000;
+  const DEAD = 3 * 60 * 60 * 1000;
+
+  it('sweepStale removes closed past the closed ttl, keeps recent closed', () => {
     const s = new SessionStore();
-    s.upsertFromEvent(ev('session-end', 1000, 'old'));
-    s.upsertFromEvent(ev('needs-you', 1000, 'live'));
-    s.evictStale(1000 + 60_000, 30_000);
-    expect(s.get('old')).toBeUndefined();
-    expect(s.get('live')).toBeDefined();
+    s.upsertFromEvent(ev('session-end', 0, 'oldClosed'));
+    s.upsertFromEvent(ev('session-end', CLOSED, 'recentClosed'));
+    expect(s.sweepStale(CLOSED + 1, CLOSED, DEAD)).toBe(true);
+    expect(s.get('oldClosed')).toBeUndefined();
+    expect(s.get('recentClosed')).toBeDefined();
+  });
+
+  it('sweepStale removes working/started silent past the dead ttl', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('working', 0, 'deadWorking'));
+    s.upsertFromEvent(ev('working', DEAD, 'liveWorking'));
+    expect(s.sweepStale(DEAD + 1, CLOSED, DEAD)).toBe(true);
+    expect(s.get('deadWorking')).toBeUndefined();
+    expect(s.get('liveWorking')).toBeDefined();
+  });
+
+  it('sweepStale never evicts unseen needs-you or unseen done, however old', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('needs-you', 0, 'needs'));
+    s.upsertFromEvent(ev('turn-done', 0, 'done'));
+    expect(s.sweepStale(DEAD * 1000, CLOSED, DEAD)).toBe(false);
+    expect(s.get('needs')).toBeDefined();
+    expect(s.get('done')).toBeDefined();
+  });
+
+  it('sweepStale evicts an acknowledged (seen) done session past the dead ttl', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('turn-done', 0, 'doneSeen'));
+    s.markSeen('doneSeen'); // attention -> none, seen true; state stays 'done', lastEventAt stays 0
+    expect(s.sweepStale(DEAD + 1, CLOSED, DEAD)).toBe(true);
+    expect(s.get('doneSeen')).toBeUndefined();
+  });
+
+  it('dismiss removes a session and reports whether one was removed', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('working', 1, 'a'));
+    expect(s.dismiss('a')).toBe(true);
+    expect(s.get('a')).toBeUndefined();
+    expect(s.dismiss('missing')).toBe(false);
   });
   it('round-trips through toJSON/fromJSON', () => {
     const s = new SessionStore();

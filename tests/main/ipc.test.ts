@@ -34,4 +34,18 @@ describe('ipc handlers', () => {
     expect(core.attentionCount()).toBe(0);
     await core.close();
   });
+
+  it('dismiss removes a session from the snapshot', async () => {
+    const paths = appPaths(home); await mkdir(paths.dataDir, { recursive: true });
+    const core = await createBeaconCore({ paths, persistDebounceMs: 5 });
+    const h = createIpcHandlers(core, async () => ({ ok: true, message: 'x' }));
+
+    const ev = buildRawEvent({ tool: 'claude', event: 'SessionStart', env: {}, stdin: { session_id: 'sid-2', cwd: '/r' }, cwd: '/r', gitRoot: '/r', ts: 1 });
+    await send(paths.socketPath, JSON.stringify(ev));
+    await waitFor(() => core.store.get('claude:sid-2') !== undefined);
+
+    h.dismiss('claude:sid-2');
+    expect(core.store.get('claude:sid-2')).toBeUndefined();
+    await core.close();
+  });
 });

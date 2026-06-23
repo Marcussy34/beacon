@@ -37,6 +37,23 @@ describe('createBeaconCore', () => {
     await core.close();
   });
 
+  it('dismiss removes a session and notifies onChange', async () => {
+    const paths = appPaths(home);
+    await mkdir(paths.dataDir, { recursive: true });
+    let changes = 0;
+    const core = await createBeaconCore({ paths, persistDebounceMs: 10, onChange: () => { changes++; } });
+
+    const ev = buildRawEvent({ tool: 'claude', event: 'SessionStart', env: {}, stdin: { session_id: 'sid-d', cwd: '/r' }, cwd: '/r', gitRoot: '/r', ts: 1 });
+    await send(paths.socketPath, JSON.stringify(ev));
+    await waitFor(() => core.store.get('claude:sid-d') !== undefined);
+
+    const before = changes;
+    core.dismiss('claude:sid-d');
+    expect(core.store.get('claude:sid-d')).toBeUndefined();
+    expect(changes).toBeGreaterThan(before);
+    await core.close();
+  });
+
   it('persists across restart: state.json is reloaded into a fresh core', async () => {
     const paths = appPaths(home);
     await mkdir(paths.dataDir, { recursive: true });

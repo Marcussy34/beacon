@@ -30,6 +30,7 @@ function mockBeacon(over: Partial<Window['beacon']> = {}) {
     getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [reconciled] }),
     markSeen: vi.fn().mockResolvedValue(undefined),
     goto: vi.fn().mockResolvedValue({ ok: true, message: 'Focused the Terminal tab' }),
+    dismiss: vi.fn().mockResolvedValue(undefined),
     hide: vi.fn().mockResolvedValue(undefined),
     onUpdate: vi.fn().mockReturnValue(() => {}),
     ...over,
@@ -70,6 +71,15 @@ describe('App panel', () => {
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /go to/i }));
     expect(await screen.findByText(/couldn't focus the editor/i)).toBeTruthy();
+  });
+
+  it('Dismiss calls beacon.dismiss with tempId, never the display id', async () => {
+    const beacon = mockBeacon();
+    render(<App />);
+    const x = await screen.findByRole('button', { name: /dismiss/i });
+    fireEvent.click(x);
+    await waitFor(() => expect(beacon.dismiss).toHaveBeenCalledWith(reconciled.tempId));
+    expect(beacon.dismiss).not.toHaveBeenCalledWith(reconciled.id);
   });
 
   it('the close button hides the panel via beacon.hide', async () => {
