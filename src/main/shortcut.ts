@@ -18,17 +18,20 @@ export interface ShortcutManager {
 /** Register a global accelerator with conflict detection. register() fails silently (false) when
  *  the combo is taken — we surface that as lastError and keep going (the Tray still works). */
 export function createShortcutManager(deps: ShortcutDeps, onTrigger: () => void): ShortcutManager {
-  let applied = DEFAULT_ACCELERATOR;
+  let applied: string | null = null;             // last SUCCESSFULLY-applied accelerator
+  let lastAttempted = DEFAULT_ACCELERATOR;        // most recent attempt (used until a success lands)
   let error: string | null = null;
   return {
     apply(accelerator) {
+      lastAttempted = accelerator;
       deps.unregisterAll();
       const ok = deps.register(accelerator, onTrigger);
       if (ok) { applied = accelerator; error = null; }
       else { error = `Shortcut "${accelerator}" is already in use by another app; pick another.`; }
       return { ok, accelerator };
     },
-    current: () => applied,
+    // last successful accelerator, or the attempted one if none has succeeded yet
+    current: () => applied ?? lastAttempted,
     lastError: () => error,
     dispose: () => deps.unregisterAll(),
   };

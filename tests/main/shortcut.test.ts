@@ -38,6 +38,12 @@ describe('createShortcutManager', () => {
     expect(m.current()).toBe('CommandOrControl+Shift+B');
     expect(m.lastError()).toBeNull();
   });
+  it('current() is the attempted accelerator when the first apply fails (none succeeded yet)', () => {
+    const { deps } = fakeDeps(new Set(['CommandOrControl+Shift+J'])); // the first attempt is taken
+    const m = createShortcutManager(deps, () => {});
+    expect(m.apply('CommandOrControl+Shift+J').ok).toBe(false);
+    expect(m.current()).toBe('CommandOrControl+Shift+J'); // the attempted one, not DEFAULT
+  });
 });
 
 describe('accelerator persistence', () => {
