@@ -68,12 +68,14 @@ else {
 
     // Global hotkey (⌘⇧Space, configurable). register() fails SILENTLY if the combo is taken,
     // so the manager surfaces that as lastError and the Tray keeps working regardless.
+    const accelerator = loadAccelerator(join(paths.dataDir, 'shortcut.json'));
     const shortcut = createShortcutManager(
       { register: (a, cb) => globalShortcut.register(a, cb), unregisterAll: () => globalShortcut.unregisterAll() },
       () => panel.toggle(),
     );
-    const res = shortcut.apply(loadAccelerator(join(paths.dataDir, 'shortcut.json')));
-    if (!res.ok) console.warn('Beacon:', shortcut.lastError(), '— summon via the menu-bar icon instead.');
+    const res = shortcut.apply(accelerator);
+    console.log(`[beacon] global shortcut "${accelerator}": ${res.ok ? 'registered' : 'CONFLICT'}`);
+    if (!res.ok) console.warn('[beacon]', shortcut.lastError(), '— summon via the menu-bar icon instead.');
 
     // First run: install Beacon's hooks (idempotent merge — safe even if already installed manually).
     // TODO(M3c): in a packaged build, pass resolveHookCommand({ packaged, execPath, resourcesPath }) so
