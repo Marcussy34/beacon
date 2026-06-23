@@ -55,13 +55,14 @@ else {
 
     const handlers = createIpcHandlers(core, async (key) => {
       const s = core.store.get(key);
+      // Log only failures (no session, or a focus attempt that didn't succeed) — success is silent.
       if (!s) { console.warn(`[beacon] goto: no session for key "${key}"`); return { ok: false, message: 'session gone' }; }
       const r = await focusSession(s, systemRunner);
-      console.log(`[beacon] goto "${key}" host=${s.host}: ok=${r.ok} — ${r.message}`);
+      if (!r.ok) console.warn(`[beacon] goto "${key}" host=${s.host} failed: ${r.message}`);
       return { ok: r.ok, message: r.message };
     });
     ipcMain.handle('snapshot', () => handlers.snapshot());
-    ipcMain.handle('markSeen', (_e, key: string) => { console.log(`[beacon] markSeen "${key}"`); return handlers.markSeen(key); });
+    ipcMain.handle('markSeen', (_e, key: string) => handlers.markSeen(key));
     ipcMain.handle('goto', (_e, key: string) => handlers.goto(key));
 
     // Launching a second instance summons the panel instead of starting another app.
