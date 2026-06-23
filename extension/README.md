@@ -10,4 +10,4 @@ extension reveals the exact terminal tab whose shell matches the session.
 
 ## Install
 
-See `docs/superpowers/EXTENSION-INSTALL.md` in the Beacon repo.
+See `docs/EXTENSION-INSTALL.md` in the Beacon repo.

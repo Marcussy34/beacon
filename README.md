@@ -71,7 +71,7 @@ Then start a `claude` or `codex` session anywhere and watch it appear. Hit **⌘
 
 VS Code and Cursor can't normally target a specific integrated-terminal *tab* from the outside — Beacon can
 only bring the right **window** forward. The optional **Beacon Focus Helper** extension fixes that: it reveals
-the exact terminal tab your agent is running in. See [docs/superpowers/EXTENSION-INSTALL.md](docs/superpowers/EXTENSION-INSTALL.md).
+the exact terminal tab your agent is running in. See [docs/EXTENSION-INSTALL.md](docs/EXTENSION-INSTALL.md).
 
 ## What Beacon touches (and what it doesn't)
 
@@ -105,7 +105,7 @@ Beacon runs on your machine and watches your dev environment, so here's exactly 
 5. **Go to** dispatches a per-host focus strategy (AppleScript for Terminal, `open -b` + the companion
    extension for editors), with graceful fallbacks when a session is remote or a window is gone.
 
-For the full design, see [docs/superpowers/specs/2026-06-22-beacon-design.md](docs/superpowers/specs/2026-06-22-beacon-design.md).
+For the full design, see [docs/beacon-design.md](docs/beacon-design.md).
 
 ## Known limitations
 
