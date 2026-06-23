@@ -90,6 +90,12 @@ describe('systemRunner', () => {
     const res = await systemRunner({ program: 'true', args: [] });
     expect(res.ok).toBe(true);
   });
+  it('honors delayMs: spawns after the delay and still resolves (the focus-URL settle path)', async () => {
+    const start = Date.now();
+    const res = await systemRunner({ program: 'true', args: [], delayMs: 30 });
+    expect(res.ok).toBe(true);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(25); // waited before spawning
+  });
 });
 
 describe('focusExecPath', () => {
