@@ -48,4 +48,20 @@ describe('ipc handlers', () => {
     expect(core.store.get('claude:sid-2')).toBeUndefined();
     await core.close();
   });
+
+  it('move demotes a needs-you session to done in the snapshot', async () => {
+    const paths = appPaths(home); await mkdir(paths.dataDir, { recursive: true });
+    const core = await createBeaconCore({ paths, persistDebounceMs: 5 });
+    const h = createIpcHandlers(core, async () => ({ ok: true, message: 'x' }));
+
+    const ev = buildRawEvent({ tool: 'claude', event: 'Notification', env: {}, stdin: { session_id: 'sid-3', cwd: '/r' }, cwd: '/r', gitRoot: '/r', ts: 1 });
+    await send(paths.socketPath, JSON.stringify(ev));
+    await waitFor(() => core.store.get('claude:sid-3')?.attention === 'needs-you');
+
+    h.move('claude:sid-3', 'done');
+    const snap = h.snapshot().sessions.find(s => s.id === 'claude:sid-3')!;
+    expect(snap.state).toBe('done');
+    expect(snap.seen).toBe(true);
+    await core.close();
+  });
 });

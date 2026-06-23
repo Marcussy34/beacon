@@ -87,6 +87,21 @@ export class SessionStore {
   }
 
   /**
+   * Manually move a session between the Needs-you and Done groups (de-prioritize a handled prompt,
+   * or re-flag a done one). Asserts a synthetic state; the next real hook event overwrites it via
+   * applyEvent, so new activity re-surfaces the live state. No-op on a missing or closed session.
+   * Does NOT bump lastEventAt — this is a UI action, not session activity.
+   */
+  moveToGroup(key: string, group: 'needsYou' | 'done'): void {
+    const s = this.map.get(key);
+    if (!s || s.state === 'closed') return;
+    const next = group === 'done'
+      ? { state: 'done' as const, attention: 'none' as const, seen: true }
+      : { state: 'waiting' as const, attention: 'needs-you' as const, seen: false };
+    this.map.set(key, { ...s, ...next });
+  }
+
+  /**
    * Remove stale sessions. "Stale" = SILENT (no events) past a threshold AND not awaiting the user:
    * unseen needs-you / unseen done are protected and never time-evicted. closed → closedTtlMs,
    * everything else (working/started, or an acknowledged needs-you/done) → deadTtlMs.

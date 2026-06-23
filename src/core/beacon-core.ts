@@ -9,10 +9,10 @@ import type { SessionsSnapshot } from '../domain/store';
 import type { AppPaths } from './app-paths';
 
 // Staleness sweep: a session is "silent" when no hook events have arrived for it. The sweep
-// removes silent-past-threshold sessions (see store.sweepStale). Closed sessions drop after 1 h;
-// presumed-dead (working/started, or an acknowledged needs-you/done) after 3 h.
-const CLOSED_TTL_MS = 60 * 60 * 1000;
-const DEAD_TTL_MS = 3 * 60 * 60 * 1000;
+// removes silent-past-threshold sessions (see store.sweepStale). Both closed and presumed-dead
+// (working/started, or an acknowledged needs-you/done) sessions drop after 24 h silent.
+const CLOSED_TTL_MS = 24 * 60 * 60 * 1000;
+const DEAD_TTL_MS = 24 * 60 * 60 * 1000;
 const SWEEP_INTERVAL_MS = 60_000;
 
 export interface BeaconCore {
@@ -21,6 +21,7 @@ export interface BeaconCore {
   attentionCount(): number;
   markSeen(key: string): void;
   dismiss(key: string): void;
+  moveToGroup(key: string, group: 'needsYou' | 'done'): void;
   close(): Promise<void>;
 }
 
@@ -63,6 +64,7 @@ export async function createBeaconCore(opts: {
     attentionCount: () => store.attentionCount(),
     markSeen: (key) => { store.markSeen(key); touched(); },
     dismiss: (key) => { store.dismiss(key); touched(); },
+    moveToGroup: (key, group) => { store.moveToGroup(key, group); touched(); },
     // stop sweep + watcher + collector, then flush any pending write
     close: async () => { clearInterval(sweep); watcher?.close(); await collector.close(); await writer.flush(); },
   };

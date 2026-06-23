@@ -31,6 +31,7 @@ function mockBeacon(over: Partial<Window['beacon']> = {}) {
     markSeen: vi.fn().mockResolvedValue(undefined),
     goto: vi.fn().mockResolvedValue({ ok: true, message: 'Focused the Terminal tab' }),
     dismiss: vi.fn().mockResolvedValue(undefined),
+    move: vi.fn().mockResolvedValue(undefined),
     hide: vi.fn().mockResolvedValue(undefined),
     onUpdate: vi.fn().mockReturnValue(() => {}),
     ...over,
@@ -80,6 +81,24 @@ describe('App panel', () => {
     fireEvent.click(x);
     await waitFor(() => expect(beacon.dismiss).toHaveBeenCalledWith(reconciled.tempId));
     expect(beacon.dismiss).not.toHaveBeenCalledWith(reconciled.id);
+  });
+
+  it('Move on a done row escalates via beacon.move(tempId, "needsYou")', async () => {
+    const beacon = mockBeacon(); // `reconciled` fixture has state:'done'
+    render(<App />);
+    const btn = await screen.findByRole('button', { name: /move to needs you/i });
+    fireEvent.click(btn);
+    await waitFor(() => expect(beacon.move).toHaveBeenCalledWith(reconciled.tempId, 'needsYou'));
+    expect(beacon.move).not.toHaveBeenCalledWith(reconciled.id, 'needsYou');
+  });
+
+  it('Move on a needs-you row demotes via beacon.move(tempId, "done")', async () => {
+    const waiting: Session = { ...reconciled, id: 'codex:w', tempId: 'codex:w:tty', state: 'waiting', attention: 'needs-you', seen: false, repoName: 'waitingrepo' };
+    const beacon = mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [waiting] }) });
+    render(<App />);
+    const btn = await screen.findByRole('button', { name: /move to done/i });
+    fireEvent.click(btn);
+    await waitFor(() => expect(beacon.move).toHaveBeenCalledWith(waiting.tempId, 'done'));
   });
 
   it('the close button hides the panel via beacon.hide', async () => {

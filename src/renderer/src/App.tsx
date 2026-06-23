@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   SquareTerminal, CircleHelp,
-  AlertTriangle, ArrowRight, Check, X,
+  AlertTriangle, ArrowRight, Check, X, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ declare global {
       markSeen(tempId: string): Promise<void>;
       goto(tempId: string): Promise<{ ok: boolean; message: string }>;
       dismiss(tempId: string): Promise<void>;
+      move(tempId: string, group: 'needsYou' | 'done'): Promise<void>;
       hide(): Promise<void>;
       onUpdate(cb: (s: Snap) => void): () => void;
     };
@@ -91,6 +92,9 @@ function Row({ session, dot, onToast }: {
   session: Session; dot: string; onToast: (m: string) => void;
 }) {
   const showSeen = session.attention !== 'none' && !session.seen;
+  // Grouping is by state: a waiting row lives in Needs-you, a done row in Done. Offer the inverse move.
+  const moveTarget: 'done' | 'needsYou' | null =
+    session.state === 'waiting' ? 'done' : session.state === 'done' ? 'needsYou' : null;
   const go = async () => {
     const res = await window.beacon.goto(session.tempId);
     if (!res.ok) onToast(res.message);
@@ -106,7 +110,15 @@ function Row({ session, dot, onToast }: {
           <AlertTriangle className="h-2.5 w-2.5" />degraded
         </Badge>
       )}
-      <span className="ml-auto shrink-0 text-xs tabular-nums text-zinc-500">
+      {moveTarget && (
+        <Button variant="ghost" size="icon"
+          aria-label={moveTarget === 'done' ? 'Move to Done' : 'Move to Needs you'}
+          className="app-no-drag ml-auto h-6 w-6 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-200 group-hover:opacity-100"
+          onClick={() => window.beacon.move(session.tempId, moveTarget)}>
+          {moveTarget === 'done' ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+        </Button>
+      )}
+      <span className={`${moveTarget ? '' : 'ml-auto '}shrink-0 text-xs tabular-nums text-zinc-500`}>
         {relativeTime(session.lastEventAt, Date.now())}
       </span>
       {showSeen && (
@@ -167,8 +179,13 @@ export function App() {
         {GROUPS.map(({ key, label, dot }) => {
           const items = groups[key];
           if (items.length === 0) return null;
+          // Divider above Working: splits the attention section (Needs you + Done) from the
+          // in-progress rows. Only when something is actually rendered above it.
+          const divider = key === 'working' && (groups.needsYou.length > 0 || groups.done.length > 0);
           return (
-            <section key={key} className="mb-3">
+            // mb-5 gives an even ~20px gap between every group; the divider's pt-5 matches that
+            // previous gap so the line sits symmetrically (equal space above and below).
+            <section key={key} className={`mb-5${divider ? ' border-t border-white/10 pt-5' : ''}`}>
               <h2 className="mb-1 flex items-center gap-1.5 px-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
                 <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />{label}
                 <span className="text-zinc-600">{items.length}</span>

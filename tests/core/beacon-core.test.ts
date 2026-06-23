@@ -54,6 +54,23 @@ describe('createBeaconCore', () => {
     await core.close();
   });
 
+  it('moveToGroup demotes a session and notifies onChange', async () => {
+    const paths = appPaths(home);
+    await mkdir(paths.dataDir, { recursive: true });
+    let changes = 0;
+    const core = await createBeaconCore({ paths, persistDebounceMs: 10, onChange: () => { changes++; } });
+
+    const ev = buildRawEvent({ tool: 'claude', event: 'Notification', env: {}, stdin: { session_id: 'sid-m', cwd: '/r' }, cwd: '/r', gitRoot: '/r', ts: 1 });
+    await send(paths.socketPath, JSON.stringify(ev));
+    await waitFor(() => core.store.get('claude:sid-m')?.attention === 'needs-you');
+
+    const before = changes;
+    core.moveToGroup('claude:sid-m', 'done');
+    expect(core.store.get('claude:sid-m')!.state).toBe('done');
+    expect(changes).toBeGreaterThan(before);
+    await core.close();
+  });
+
   it('persists across restart: state.json is reloaded into a fresh core', async () => {
     const paths = appPaths(home);
     await mkdir(paths.dataDir, { recursive: true });

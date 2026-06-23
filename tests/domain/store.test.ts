@@ -75,6 +75,34 @@ describe('SessionStore', () => {
     expect(s.get('a')).toBeUndefined();
     expect(s.dismiss('missing')).toBe(false);
   });
+
+  it('moveToGroup(done) demotes a needs-you to done (handled)', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('needs-you', 1, 'a'));
+    s.moveToGroup('a', 'done');
+    const x = s.get('a')!;
+    expect(x.state).toBe('done');
+    expect(x.attention).toBe('none');
+    expect(x.seen).toBe(true);
+  });
+
+  it('moveToGroup(needsYou) escalates a done back to needs-you', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('turn-done', 1, 'b'));
+    s.moveToGroup('b', 'needsYou');
+    const x = s.get('b')!;
+    expect(x.state).toBe('waiting');
+    expect(x.attention).toBe('needs-you');
+    expect(x.seen).toBe(false);
+  });
+
+  it('moveToGroup is a no-op on a closed or missing session', () => {
+    const s = new SessionStore();
+    s.upsertFromEvent(ev('session-end', 1, 'c'));
+    s.moveToGroup('c', 'needsYou');
+    expect(s.get('c')!.state).toBe('closed'); // closed is never reanimated
+    s.moveToGroup('missing', 'done');          // must not throw
+  });
   it('round-trips through toJSON/fromJSON', () => {
     const s = new SessionStore();
     s.upsertFromEvent(ev('needs-you', 7, 'a'));

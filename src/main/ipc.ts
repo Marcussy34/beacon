@@ -5,6 +5,7 @@ export interface IpcHandlers {
   snapshot(): SessionsSnapshot;
   markSeen(key: string): void;
   dismiss(key: string): void;
+  move(key: string, group: 'needsYou' | 'done'): void;
   goto(key: string): Promise<{ ok: boolean; message: string }>;
 }
 
@@ -17,6 +18,7 @@ export function createIpcHandlers(
     snapshot: () => core.snapshot(),
     markSeen: (key) => core.markSeen(key),
     dismiss: (key) => core.dismiss(key),
+    move: (key, group) => core.moveToGroup(key, group),
     goto: async (key) => { core.markSeen(key); return focus(key); }, // "Go to" also marks seen (spec §4.6)
   };
 }
