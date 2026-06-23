@@ -43,8 +43,14 @@ export async function focusTerminalByTty(
     if (pid === undefined) continue;
     const tty = await resolve(pid).catch(() => null);
     if (tty !== null && tty === target) {
-      terminal.show();
-      return true;
+      // Guard against a disposed terminal: show() may throw synchronously.
+      // Matched but couldn't reveal → return false rather than letting the error escape.
+      try {
+        terminal.show();
+        return true;
+      } catch {
+        return false;
+      }
     }
   }
   return false;

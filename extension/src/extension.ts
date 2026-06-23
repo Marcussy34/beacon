@@ -8,7 +8,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerUriHandler({
       handleUri(uri: vscode.Uri): void {
         // Fire and forget: handleUri must return synchronously; focusing happens in the background.
-        void handleFocusUri(uri);
+        // Defensive .catch() prevents any unexpected rejection from becoming an unhandled rejection.
+        void handleFocusUri(uri).catch(() => {});
       },
     }),
   );

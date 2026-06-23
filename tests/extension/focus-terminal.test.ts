@@ -63,4 +63,13 @@ describe('focusTerminalByTty', () => {
     expect(await focusTerminalByTty('/dev/ttys154', [a, b], resolve)).toBe(true);
     expect(b.shown).toBe(true);
   });
+  // Defect 2: show() throwing must not escape — resolves false, never rejects.
+  it('resolves false (never rejects) when the matching terminal show() throws', async () => {
+    const throwing: TerminalLike = {
+      processId: Promise.resolve(1),
+      show() { throw new Error('disposed'); },
+    };
+    const resolve: PidTtyResolver = async () => '/dev/ttys154';
+    await expect(focusTerminalByTty('/dev/ttys154', [throwing], resolve)).resolves.toBe(false);
+  });
 });
