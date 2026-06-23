@@ -1,0 +1,44 @@
+name: Release
+
+# Cut a release by pushing a version tag, e.g.:
+#   npm version 0.1.0 --no-git-tag-version   # bump package.json
+#   git commit -am "chore: release v0.1.0" && git tag v0.1.0 && git push --follow-tags
+#
+# This builds a signed + notarized DMG (+ zip) for arm64 and x64 and uploads them to a
+# GitHub Release. Configure the secrets listed below first — see docs/RELEASING.md.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # required to create the GitHub Release
+
+jobs:
+  release:
+    # macos-14 is Apple Silicon; electron-builder cross-builds the x64 artifacts from here.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build, sign, notarize, and publish
+        env:
+          # --- Code signing (Developer ID Application certificate) ---
+          # CSC_LINK = base64 of your exported .p12; CSC_KEY_PASSWORD = its export password.
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # --- Notarization (Apple ID app-specific password route) ---
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # --- GitHub Release upload ---
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run release:mac

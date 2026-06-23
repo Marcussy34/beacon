@@ -4,6 +4,7 @@
   "private": true,
   "description": "Menu-bar watcher for Claude Code and Codex CLI sessions across all your repos.",
   "author": "Marcus",
+  "license": "MIT",
   "type": "module",
   "main": "./out/main/index.js",
   "bin": {
@@ -19,7 +20,9 @@
     "build": "npm run build:hook && npm run build:installer",
     "dev": "electron-vite dev",
     "build:app": "npm run build:hook && electron-vite build",
-    "pack:mac": "npm run build:app && electron-builder --mac --dir",
+    "pack:mac": "npm run build:app && electron-builder --mac --dir -c.mac.hardenedRuntime=false",
+    "dist:mac": "npm run build:app && electron-builder --mac --publish never",
+    "release:mac": "npm run build:app && electron-builder --mac --publish always",
     "build:extension": "cd extension && npm install && npm run compile && npm run package"
   },
   "devDependencies": {

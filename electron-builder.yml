@@ -14,15 +14,45 @@ extraResources:
     to: iconTemplate.png
   - from: resources/iconTemplate@2x.png
     to: iconTemplate@2x.png
+# Deterministic artifact names ("Beacon-<version>-<arch>.dmg") so the Homebrew cask URLs are
+# stable across arm64 / x64.
+artifactName: ${productName}-${version}-${arch}.${ext}
 mac:
   category: public.app-category.developer-tools
-  # Unsigned local build (no DMG, no notarization). Signing needs an Apple Developer ID;
-  # add `identity` + a notarize step here later for distribution.
+  # --- Signed + notarized distribution -------------------------------------------------
+  # Signing: electron-builder auto-discovers a "Developer ID Application" certificate in the
+  #   keychain (or set CSC_LINK + CSC_KEY_PASSWORD). With no cert present, signing is skipped
+  #   and you get an unsigned local build (fine for `npm run pack:mac`, NOT for distribution).
+  # Notarization: runs automatically when one of these env-var sets is present —
+  #   1) APPLE_API_KEY + APPLE_API_KEY_ID + APPLE_API_ISSUER  (App Store Connect key, recommended)
+  #   2) APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID
+  # hardenedRuntime is required for notarization; entitlements grant the Apple Events ("Go to")
+  # and JIT capabilities the hardened runtime would otherwise block.
+  # Full runbook: docs/RELEASING.md
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # dmg = the user-facing download; zip is required ALONGSIDE dmg for Squirrel.Mac auto-update
+  # later (electron-builder warns auto-update breaks if zip is omitted).
   target:
-    - target: dir
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
   extendInfo:
     # No dock icon / no Cmd-Tab — pure menu-bar app.
     LSUIElement: true
     # Required so "Go to" can drive Terminal/VS Code/Cursor via AppleScript (Apple Events).
     NSAppleEventsUsageDescription: "Beacon focuses your terminal or editor window via AppleScript when you click 'Go to'."
-  entitlementsInherit: build/entitlements.mac.plist
+dmg:
+  title: ${productName} ${version}
+# Publish target for `electron-builder --publish` — GitHub Releases. Used by the release workflow.
+publish:
+  provider: github
+  owner: Marcussy34
+  repo: beacon
