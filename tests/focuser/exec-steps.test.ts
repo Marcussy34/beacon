@@ -8,11 +8,10 @@ describe('toExecSteps', () => {
       { program: 'osascript', args: ['-e', TERMINAL_FOCUS_APPLESCRIPT, '/dev/ttys003'] },
     ]);
   });
-  it('editor -> reuse-window then activate by bundle id', () => {
+  it('editor -> open the repo folder in the app by bundle id (no code/cursor CLI)', () => {
     const steps = toExecSteps({ kind: 'editor', cli: 'code', gitRoot: '/Users/m/repo', bundleId: 'com.microsoft.VSCode' });
     expect(steps).toEqual([
-      { program: 'code', args: ['--reuse-window', '/Users/m/repo'] },
-      { program: 'open', args: ['-b', 'com.microsoft.VSCode'] },
+      { program: 'open', args: ['-b', 'com.microsoft.VSCode', '/Users/m/repo'] },
     ]);
   });
   it('reveal -> open -R path', () => {

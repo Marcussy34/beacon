@@ -9,11 +9,14 @@ const base: Session = {
   state: 'done', attention: 'done', seen: false, startedAt: 1, lastEventAt: 2,
 };
 
-function recordingRunner(failProgram?: string): { run: Runner; steps: ExecStep[] } {
+// `fail` lets a test mark specific steps as failing. The editor focus and the reveal fallback both
+// run `open`, so we distinguish by args (editor = `open -b ...`, reveal = `open -R ...`).
+function recordingRunner(fail?: (s: ExecStep) => boolean): { run: Runner; steps: ExecStep[] } {
   const steps: ExecStep[] = [];
-  const run: Runner = async (step) => { steps.push(step); return { ok: step.program !== failProgram }; };
+  const run: Runner = async (step) => { steps.push(step); return { ok: !(fail?.(step)) }; };
   return { run, steps };
 }
+const editorStepFails = (s: ExecStep) => s.args[0] === '-b'; // `open -b <bundle> <folder>` failed
 
 describe('focusSession', () => {
   it('runs all steps and reports ok on success (editor)', async () => {
@@ -21,7 +24,8 @@ describe('focusSession', () => {
     const res = await focusSession(base, run);
     expect(res.ok).toBe(true);
     expect(res.usedFallback).toBe(false);
-    expect(steps.map((s) => s.program)).toEqual(['code', 'open']);
+    // Editor focus is a single `open -b <bundleId> <gitRoot>` — no code/cursor CLI step.
+    expect(steps).toEqual([{ program: 'open', args: ['-b', 'com.microsoft.VSCode', '/Users/m/repo'] }]);
   });
 
   it('terminal host uses osascript', async () => {
@@ -31,8 +35,8 @@ describe('focusSession', () => {
     expect(steps[0]!.program).toBe('osascript');
   });
 
-  it('falls back to reveal when the editor CLI fails (local)', async () => {
-    const { run, steps } = recordingRunner('code'); // `code` not installed
+  it('falls back to reveal when the editor open fails (local)', async () => {
+    const { run, steps } = recordingRunner(editorStepFails); // editor not installed / open -b failed
     const res = await focusSession(base, run);
     expect(res.ok).toBe(false);
     expect(res.usedFallback).toBe(true);
@@ -41,7 +45,7 @@ describe('focusSession', () => {
   });
 
   it('falls back to copy-path when editor fails on a remote session', async () => {
-    const { run } = recordingRunner('code');
+    const { run } = recordingRunner(editorStepFails);
     const res = await focusSession({ ...base, remote: 'ssh' }, run);
     expect(res.usedFallback).toBe(true);
     expect(res.command.kind).toBe('copy-path');
