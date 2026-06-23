@@ -33,6 +33,19 @@ describe('groupSessions', () => {
     expect(g.closed.map(x => x.id)).toEqual(['d']);
   });
 
+  it('keeps a seen done/needs-you session in its bucket (markSeen clears attention, state stays)', () => {
+    // Regression: clicking "Go to" calls markSeen → attention becomes 'none'. Bucketing must
+    // follow the durable lifecycle `state`, not `attention`, or the row jumps to Working.
+    const s = (over: Partial<Session>): Session => ({ ...base, ...over });
+    const g = groupSessions([
+      s({ id: 'doneSeen', state: 'done', attention: 'none', seen: true, lastEventAt: 3 }),
+      s({ id: 'needsSeen', state: 'waiting', attention: 'none', seen: true, lastEventAt: 4 }),
+    ]);
+    expect(g.done.map(x => x.id)).toEqual(['doneSeen']);
+    expect(g.needsYou.map(x => x.id)).toEqual(['needsSeen']);
+    expect(g.working).toEqual([]);
+  });
+
   it('closed beats attention: a closed session with needs-you lands in closed, not needsYou', () => {
     const s = (over: Partial<Session>): Session => ({ ...base, ...over });
     const g = groupSessions([
