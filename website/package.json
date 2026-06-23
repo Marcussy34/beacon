@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next --turbopack",
     "build": "next build",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "start": "next start"
   },
   "dependencies": {
@@ -17,5 +18,8 @@
   },
   "overrides": {
     "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2"
   }
 }

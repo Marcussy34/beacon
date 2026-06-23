@@ -8,5 +8,6 @@ out/
 *.vsix
 # Build-process docs (plans, research, checklists) stay local — not in the public repo.
 docs/superpowers/
-# Docs site (Nextra) build output
+# Docs site (Nextra) build output + generated Pagefind search index
 website/.next/
+website/public/_pagefind/
