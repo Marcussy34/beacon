@@ -55,3 +55,13 @@ These are the runtime behaviors that cannot be unit-tested (they need a real mac
 ## Notes
 - The packaged `.app` is UNSIGNED (local build). On first launch macOS Gatekeeper may require right-click → Open. Signing/notarization needs an Apple Developer ID (not set up).
 - Socket path is `~/Library/Application Support/Beacon/beacon.sock` (~60 bytes for this user — under the macOS ~104-byte limit). If a future user has a very long home path and sees no sessions, that's the documented `FIXME(socket-path)` in `src/core/app-paths.ts`.
+
+## M4 — Beacon Focus Helper (companion extension)
+
+Prereq: build + install per `docs/superpowers/EXTENSION-INSTALL.md`.
+
+- [ ] In Cursor: a repo open with TWO integrated terminals; a Claude/Codex session in terminal #2. Beacon "Go to" → Cursor forward AND terminal #2 selected.
+- [ ] In VS Code: same check (installed via "Install from VSIX…").
+- [ ] Multiple repos each with an editor session: "Go to" lands on the right window + the right tab, no cycling.
+- [ ] Extension NOT installed (or disabled): "Go to" still focuses the editor window (no Finder reveal, no error toast).
+- [ ] A standalone Terminal.app session still focuses by tty (unchanged).
