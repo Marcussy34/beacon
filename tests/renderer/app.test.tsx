@@ -30,6 +30,7 @@ function mockBeacon(over: Partial<Window['beacon']> = {}) {
     getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [reconciled] }),
     markSeen: vi.fn().mockResolvedValue(undefined),
     goto: vi.fn().mockResolvedValue({ ok: true, message: 'Focused the Terminal tab' }),
+    hide: vi.fn().mockResolvedValue(undefined),
     onUpdate: vi.fn().mockReturnValue(() => {}),
     ...over,
   };
@@ -69,5 +70,12 @@ describe('App panel', () => {
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /go to/i }));
     expect(await screen.findByText(/couldn't focus the editor/i)).toBeTruthy();
+  });
+
+  it('the close button hides the panel via beacon.hide', async () => {
+    const beacon = mockBeacon();
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /close/i }));
+    await waitFor(() => expect(beacon.hide).toHaveBeenCalled());
   });
 });

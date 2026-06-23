@@ -47,3 +47,8 @@
 html, body { background: transparent !important; }
 body { margin: 0; }
 #root { height: 100vh; overflow: hidden; }
+
+/* Frameless-window dragging: the header drags the whole window; interactive controls inside it
+   (e.g. the close button) must opt out so clicks register instead of starting a drag. */
+.app-drag { -webkit-app-region: drag; }
+.app-no-drag { -webkit-app-region: no-drag; }

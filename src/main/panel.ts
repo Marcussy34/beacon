@@ -30,7 +30,10 @@ export function createPanel(opts: {
   function build(): BrowserWindow {
     const w = new BrowserWindow({
       ...PANEL_SIZE,
-      show: false, frame: false, transparent: true, resizable: false,
+      show: false, frame: false, transparent: true,
+      // Movable (header is a drag region in the renderer) + resizable from the edges. minWidth/Height
+      // keep it usable; maximize is off (it's a HUD, not a document window).
+      resizable: true, maximizable: false, minWidth: 380, minHeight: 260,
       fullscreenable: false, skipTaskbar: true, focusable: true, alwaysOnTop: true,
       webPreferences: { preload: opts.preloadPath, contextIsolation: true, nodeIntegration: false, sandbox: true },
     });
@@ -39,7 +42,11 @@ export function createPanel(opts: {
     w.setAlwaysOnTop(true, 'screen-saver');
     if (opts.loadDevUrl) w.loadURL(opts.loadDevUrl); else w.loadFile(opts.loadFile);
     w.on('closed', () => { win = null; });
-    w.on('blur', () => { if (win && !win.webContents.isDevToolsFocused()) hide(); }); // hide on click-away
+    // NOTE: intentionally NO hide-on-blur. Beacon's panel is a PERSISTENT HUD — once summoned it stays
+    // visible across every Space/display and over other apps until the user explicitly hides it (global
+    // shortcut, Esc, or the in-panel close button). An earlier ChatGPT-style hide-on-blur was removed by
+    // user direction: it made the panel flash-and-vanish on a Space switch (Cmd+arrow) and disappear on
+    // any click elsewhere, defeating the "always on screen" purpose.
     w.webContents.on('before-input-event', (_e, input) => { if (input.key === 'Escape') hide(); });
     return w;
   }

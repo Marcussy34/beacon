@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Sparkles, Braces, Code2, MousePointer2, SquareTerminal, CircleHelp,
-  AlertTriangle, ArrowRight, Check,
+  AlertTriangle, ArrowRight, Check, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ declare global {
       getSnapshot(): Promise<Snap>;
       markSeen(tempId: string): Promise<void>;
       goto(tempId: string): Promise<{ ok: boolean; message: string }>;
+      hide(): Promise<void>;
       onUpdate(cb: (s: Snap) => void): () => void;
     };
   }
@@ -99,9 +100,17 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-zinc-900/80 p-3 text-zinc-100 backdrop-blur-md">
-      <header className="flex items-center justify-between px-1">
+      {/* The header is the drag handle for the frameless window (app-drag); the close button opts out. */}
+      <header className="app-drag flex items-center justify-between gap-2 px-1">
         <span className="text-sm font-semibold">Beacon</span>
-        <span className="text-xs text-zinc-500">{snap.sessions.length} session{snap.sessions.length === 1 ? '' : 's'}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-500">{snap.sessions.length} session{snap.sessions.length === 1 ? '' : 's'}</span>
+          <Button variant="ghost" size="icon" aria-label="Close"
+            className="app-no-drag h-6 w-6 text-zinc-400 hover:text-zinc-100"
+            onClick={() => window.beacon.hide()}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-y-auto pr-1">

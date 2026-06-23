@@ -65,6 +65,7 @@ else {
     ipcMain.handle('snapshot', () => handlers.snapshot());
     ipcMain.handle('markSeen', (_e, key: string) => handlers.markSeen(key));
     ipcMain.handle('goto', (_e, key: string) => handlers.goto(key));
+    ipcMain.handle('hide', () => panel.hide()); // in-panel close button
 
     // Launching a second instance summons the panel instead of starting another app.
     app.on('second-instance', () => panel.show());
