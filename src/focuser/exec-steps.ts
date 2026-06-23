@@ -1,5 +1,11 @@
 import type { FocusCommand, ExecStep } from './types';
 
+// `open -b <bundle> <folder>` raises the editor window ASYNCHRONOUSLY. If we fire the focus URL
+// immediately, it routes to whatever window was already frontmost (the wrong one when the user
+// summons from elsewhere). So we also fire the URL once more after this settle delay, by which time
+// `open -b` has brought the correct window forward and the URL routes there. (~window-switch time.)
+export const EDITOR_FOCUS_SETTLE_MS = 2000;
+
 // Targets the Terminal.app tab whose tty matches argv[1] and brings it to the front.
 // The tty is passed as a run-argument (osascript ... <tty>), never interpolated into the script.
 export const TERMINAL_FOCUS_APPLESCRIPT = `on run argv
@@ -33,7 +39,10 @@ export function toExecSteps(cmd: FocusCommand): ExecStep[] {
       if (cmd.tty) {
         const scheme = cmd.cli === 'cursor' ? 'cursor' : 'vscode';
         const url = `${scheme}://beacon.beacon-focus/focus?tty=${encodeURIComponent(cmd.tty)}`;
+        // Fire twice: immediately (instant when the right window is already frontmost) and again
+        // after the window-switch settles (catches the common multi-window race). Both idempotent.
         steps.push({ program: 'open', args: [url], optional: true });
+        steps.push({ program: 'open', args: [url], optional: true, delayMs: EDITOR_FOCUS_SETTLE_MS });
       }
       return steps;
     }

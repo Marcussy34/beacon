@@ -78,16 +78,21 @@ export function focusExecPath(currentPath: string | undefined): string {
 
 // Real runner: runs the step via execFile, writing stdin if present.
 // Never throws — resolves { ok:false } on any error or non-zero exit. 5s timeout.
+// Honors step.delayMs: waits that long before spawning (lets `open -b` raise the window first).
 export const systemRunner: Runner = (step: ExecStep) =>
   new Promise((resolve) => {
-    const child = execFile(
-      step.program,
-      step.args,
-      { timeout: 5000, env: { ...process.env, PATH: focusExecPath(process.env['PATH']) } },
-      (err) => { resolve({ ok: !err }); },
-    );
-    if (step.stdin !== undefined) {
-      // execFile opens stdin as a pipe by default, so it is non-null here.
-      child.stdin!.end(step.stdin, 'utf8');
-    }
+    const spawn = (): void => {
+      const child = execFile(
+        step.program,
+        step.args,
+        { timeout: 5000, env: { ...process.env, PATH: focusExecPath(process.env['PATH']) } },
+        (err) => { resolve({ ok: !err }); },
+      );
+      if (step.stdin !== undefined) {
+        // execFile opens stdin as a pipe by default, so it is non-null here.
+        child.stdin!.end(step.stdin, 'utf8');
+      }
+    };
+    if (step.delayMs && step.delayMs > 0) setTimeout(spawn, step.delayMs);
+    else spawn();
   });

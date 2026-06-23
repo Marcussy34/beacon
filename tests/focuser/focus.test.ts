@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { focusSession, systemRunner, focusExecPath } from '../../src/focuser/focus';
+import { EDITOR_FOCUS_SETTLE_MS } from '../../src/focuser/exec-steps';
 import type { Session } from '../../src/domain/types';
 import type { ExecStep, Runner } from '../../src/focuser/types';
 
@@ -57,14 +58,16 @@ describe('focusSession', () => {
     expect(res.ok).toBe(false);
   });
 
-  it('editor WITH tty runs open -b then the focus URL, and reports ok', async () => {
+  it('editor WITH tty runs open -b then the focus URL twice (immediate + settled), and reports ok', async () => {
     const { run, steps } = recordingRunner();
     const res = await focusSession({ ...base, host: 'vscode', tty: '/dev/ttys009' }, run);
     expect(res.ok).toBe(true);
     expect(res.usedFallback).toBe(false);
+    const url = 'vscode://beacon.beacon-focus/focus?tty=%2Fdev%2Fttys009';
     expect(steps).toEqual([
       { program: 'open', args: ['-b', 'com.microsoft.VSCode', '/Users/m/repo'] },
-      { program: 'open', args: ['vscode://beacon.beacon-focus/focus?tty=%2Fdev%2Fttys009'], optional: true },
+      { program: 'open', args: [url], optional: true },
+      { program: 'open', args: [url], optional: true, delayMs: EDITOR_FOCUS_SETTLE_MS },
     ]);
   });
   it('a failing focus URL (optional) does NOT trigger the reveal fallback', async () => {
