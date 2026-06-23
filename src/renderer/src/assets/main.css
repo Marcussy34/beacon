@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Drive dark mode from the .dark class (we add it on <html>), not prefers-color-scheme. */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --foreground: #18181b;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+}
+
+.dark {
+  --foreground: #fafafa;
+  --border: #27272a;
+  --input: #3f3f46;
+  --ring: #52525b;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --accent: #3f3f46;
+  --accent-foreground: #fafafa;
+}
+
+/* Map the design tokens to Tailwind color utilities (bg-primary, text-foreground, border-input, ...). */
+@theme inline {
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+}
+
+/* Frameless transparent window: the OS shows whatever is behind, the React card floats on top. */
+html, body { background: transparent !important; }
+body { margin: 0; }
+#root { height: 100vh; overflow: hidden; }

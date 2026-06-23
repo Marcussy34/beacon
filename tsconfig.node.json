@@ -9,5 +9,6 @@
     "src/domain", "src/collector", "src/hook", "src/focuser", "src/installer",
     "src/core", "src/main", "src/preload",
     "tests", "electron.vite.config.ts"
-  ]
+  ],
+  "exclude": ["tests/renderer"]
 }

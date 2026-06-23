@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   main: {
@@ -21,8 +22,11 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
+    // base: './' makes built asset URLs relative, so the packaged file:// load resolves them
+    // (Vite's default base '/' breaks under file://).
+    base: './',
     build: { rollupOptions: { input: { index: resolve('src/renderer/index.html') } } },
-    resolve: { alias: { '@renderer': resolve('src/renderer/src') } },
-    plugins: [react()],
+    resolve: { alias: { '@renderer': resolve('src/renderer/src'), '@': resolve('src/renderer/src') } },
+    plugins: [react(), tailwindcss()],
   },
 });
