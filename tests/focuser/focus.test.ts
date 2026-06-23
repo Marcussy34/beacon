@@ -66,19 +66,23 @@ describe('systemRunner', () => {
 });
 
 describe('focusExecPath', () => {
-  it('prepends Homebrew + local bins and guarantees system bins', () => {
-    expect(focusExecPath('/usr/bin:/bin')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+  it('puts system bins first, then Homebrew/local, then inherited', () => {
+    expect(focusExecPath('/usr/bin:/bin')).toBe('/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin');
   });
   it('handles an undefined/empty PATH', () => {
-    expect(focusExecPath(undefined)).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
-    expect(focusExecPath('')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+    expect(focusExecPath(undefined)).toBe('/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin');
+    expect(focusExecPath('')).toBe('/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin');
   });
   it('does not duplicate dirs already present', () => {
-    expect(focusExecPath('/opt/homebrew/bin:/usr/bin')).toBe('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin');
+    expect(focusExecPath('/opt/homebrew/bin:/usr/bin')).toBe('/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin');
   });
-  it('preserves additional existing dirs in order, after the prepended bins', () => {
+  it('appends additional inherited dirs after the system + Homebrew/local bins', () => {
     expect(focusExecPath('/Users/m/.local/bin:/usr/bin')).toBe(
-      '/opt/homebrew/bin:/usr/local/bin:/Users/m/.local/bin:/usr/bin:/bin',
+      '/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin:/Users/m/.local/bin',
     );
+  });
+  it('orders /usr/bin ahead of /opt/homebrew/bin so Apple tools are not shadowed', () => {
+    const parts = focusExecPath('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin').split(':');
+    expect(parts.indexOf('/usr/bin')).toBeLessThan(parts.indexOf('/opt/homebrew/bin'));
   });
 });

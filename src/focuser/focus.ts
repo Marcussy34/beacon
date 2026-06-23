@@ -63,13 +63,15 @@ export async function focusSession(session: Session, run: Runner): Promise<Focus
 }
 
 // A Finder-launched .app inherits a minimal PATH (no /opt/homebrew/bin, /usr/local/bin), so
-// execFile('code'|'cursor') can't find the editor CLI. Prepend the common Homebrew/local bins and
-// guarantee the system bins, preserving any other inherited entries in between.
+// execFile('code'|'cursor') can't find the editor CLI. Order: system bins FIRST so Apple's
+// osascript/open/pbcopy always win over any Homebrew/local shadow; then the Homebrew/local bins
+// (where code/cursor live, absent from /usr/bin); then whatever PATH the process inherited.
+// Deduped, first occurrence wins.
 export function focusExecPath(currentPath: string | undefined): string {
-  const prepend = ['/opt/homebrew/bin', '/usr/local/bin'];
   const system = ['/usr/bin', '/bin'];
+  const prepend = ['/opt/homebrew/bin', '/usr/local/bin'];
   const existing = (currentPath ?? '').split(':').filter(Boolean);
-  const ordered = [...prepend, ...existing, ...system];
+  const ordered = [...system, ...prepend, ...existing];
   const seen = new Set<string>();
   return ordered.filter((p) => (seen.has(p) ? false : (seen.add(p), true))).join(':');
 }
