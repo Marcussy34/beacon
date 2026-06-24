@@ -16,6 +16,11 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 else {
   app.whenReady().then(async () => {
     app.dock?.hide();
+    // Beacon is a tray/accessory app whose panel window is recreated on each summon (and destroyed on
+    // the next). That routinely leaves ZERO windows open, so we must override Electron's default
+    // "quit when the last window closes" — otherwise summoning/closing the panel would kill the whole
+    // app (tray + global shortcut included). The app only exits via the explicit will-quit path below.
+    app.on('window-all-closed', () => {});
     const paths = appPaths(homedir());
 
     // The activating, all-Spaces panel: frameless, floats over fullscreen + every Space, opens on
