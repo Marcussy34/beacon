@@ -47,10 +47,11 @@ export function applyHudWindowBehavior(win: HudWindow): void {
 // real Space-jump fix: a normal NSWindow's show()/focus() call [NSApp activateIgnoringOtherApps:YES],
 // which activates the whole app and switches macOS to the window's "home" Space — so summoning the
 // panel from another Space yanked the user back to wherever it was last shown (a fullscreen video's
-// Space, or Desktop 1). For a panel, Electron SKIPS that activation: the window takes key focus via
-// makeKeyAndOrderFront without activating the app (exactly how Spotlight behaves), so it opens on the
-// CURRENT Space and never drags the user away. setVisibleOnAllWorkspaces only controls where the
-// window *appears* — not activation — which is why it looked visible everywhere yet still pulled focus.
+// Space, or Desktop 1). For a panel, Electron SKIPS that activation: focus() keys the window without
+// activating the app (exactly how Spotlight behaves), so it stays on the CURRENT Space. The summon
+// sequence lives in show() (showInactive + focus — see there). setVisibleOnAllWorkspaces only controls
+// where the window *appears* — not activation — which is why it looked visible everywhere yet still
+// pulled focus across Spaces before this fix.
 export function panelWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   return {
     ...PANEL_SIZE,
@@ -90,12 +91,47 @@ export function createPanel(opts: {
     w.setPosition(x, y);
   }
   function show(): void {
+    const freshBuild = !win;
     if (!win) win = build();
+    const allSpacesBefore = win.isVisibleOnAllWorkspaces(); // did the all-Spaces bit survive since last show?
+    // ROOT CAUSE of "panel pins to one Space / won't open where I am": macOS DROPS the window's
+    // all-Spaces membership after the panel has been shown over another app's fullscreen Space and that
+    // Space is later torn down (you exit fullscreen). The window gets re-homed to a single Space, so the
+    // next summon shows it THERE instead of where you are. setVisibleOnAllWorkspaces(true) on its own is
+    // a no-op when macOS still believes the bit is set — so TOGGLE it (false → true) on every summon to
+    // force a clean re-spread across all Spaces. The (true) half is applied by applyHudWindowBehavior
+    // below, in the load-bearing order; visibleOnFullScreen keeps FullScreenAuxiliary (float over
+    // fullscreen) and skipTransformProcessType avoids a dock flash.
+    win.setVisibleOnAllWorkspaces(false, { visibleOnFullScreen: false, skipTransformProcessType: true });
+    applyHudWindowBehavior(win);
     positionOnActiveDisplay(win);
-    // type:'panel' makes win.show() key the panel WITHOUT activating the app, so it opens on the
-    // Space the user is currently on. Do NOT call app.focus({steal:true}) here: app activation
-    // ignores the panel exemption and switches macOS to the window's home Space — the yank bug.
-    win.show();
+    // TEMP DIAGNOSTIC (remove once Space behavior is confirmed): shows the REAL per-summon state so we
+    // fix from evidence, not theory. Key signals: allSpaces* must be true (the window is on every
+    // Space, so it never needs to switch); fullScreenable must be false (→ FullScreenAuxiliary, the
+    // overlay-over-fullscreen flag); displays tells us multi-display vs multi-Space-on-one-display.
+    const cursor = screen.getCursorScreenPoint();
+    console.log('[beacon][panel] show ' + JSON.stringify({
+      freshBuild,
+      displays: screen.getAllDisplays().length,
+      cursorDisplayId: screen.getDisplayNearestPoint(cursor).id,
+      allSpacesBefore,
+      allSpacesAfter: win.isVisibleOnAllWorkspaces(),
+      fullScreenable: win.isFullScreenable(),
+      bounds: win.getBounds(),
+    }));
+    // Beacon is a dock-hidden accessory app, so two separate things must hold when summoning:
+    // (1) the panel must come to the FRONT over whatever is on the current Space — including ANOTHER
+    //     app's fullscreen Space (e.g. fullscreen video). For a background app, plain show()
+    //     (makeKeyAndOrderFront) does NOT pull a window in front over fullscreen, so macOS bails to
+    //     the desktop to show it — the "kick-out". showInactive() calls [orderFrontRegardless], the
+    //     primitive that orders a background app's window front WITHOUT activating the app, so it
+    //     overlays the CURRENT Space (fullscreen included) and never yanks you to another Space.
+    win.showInactive();
+    // (2) the panel still needs keyboard focus (Esc to close, clicks). For type:'panel', focus() is
+    //     makeKeyAndOrderFront with NO app activation (the panel exemption), so it keys the panel
+    //     without switching Spaces. Do NOT use app.focus({steal:true}) — that activates the app and
+    //     switches macOS to the window's home Space (the original yank bug).
+    win.focus();
   }
   function hide(): void { if (win && win.isVisible()) { win.hide(); opts.onHidden?.(); } }
   function toggle(): void { if (win && win.isVisible()) hide(); else show(); }
