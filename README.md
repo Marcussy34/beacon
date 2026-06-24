@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔦 Beacon
+<img src="website/public/favicon.svg" width="72" alt="Beacon logo" />
+
+# Beacon
 
 ### Mission control for your AI coding agents.
 
