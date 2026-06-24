@@ -45,4 +45,18 @@ describe('applyEvent', () => {
     applyEvent(session, ev('needs-you', 9));
     expect(session.state).toBe('started');
   });
+  it('sets the summary from an event that carries one', () => {
+    const s = applyEvent(session, { ...ev('working', 2), summary: 'topic a' });
+    expect(s.summary).toBe('topic a');
+  });
+  it('keeps the previous summary when the event carries none', () => {
+    const withSummary = { ...session, summary: 'topic a' };
+    const s = applyEvent(withSummary, ev('turn-done', 3)); // no summary on this event
+    expect(s.summary).toBe('topic a');
+  });
+  it('overwrites the summary when a newer event carries one', () => {
+    const withSummary = { ...session, summary: 'topic a' };
+    const s = applyEvent(withSummary, { ...ev('working', 4), summary: 'topic b' });
+    expect(s.summary).toBe('topic b');
+  });
 });

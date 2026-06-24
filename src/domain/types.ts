@@ -20,6 +20,7 @@ export interface RawHookEvent {
   remote: RemoteKind;
   codexAncestorPid?: number;
   codexAncestorStartTime?: string;
+  prompt?: string;                // raw user prompt (UserPromptSubmit only) — never persisted
   ts: number;                     // epoch ms
   raw?: unknown;
 }
@@ -38,6 +39,7 @@ export interface BeaconEvent {
   tty?: string;
   remote: RemoteKind;
   gotoPrecision: GotoPrecision;
+  summary?: string;               // truncated prompt snippet (UserPromptSubmit only)
   ts: number;
 }
 
@@ -58,6 +60,7 @@ export interface Session {
   state: SessionState;
   attention: Attention;
   seen: boolean;
+  summary?: string;               // latest prompt snippet — "what this session is about"
   startedAt: number;
   lastEventAt: number;
 }

@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import type { RawHookEvent, BeaconEvent, BeaconEventName, GotoPrecision } from './types';
 import { eventKey } from './identity';
+import { summarize } from './summarize';
 
 const CLAUDE_MAP: Record<string, BeaconEventName> = {
   SessionStart: 'session-start',
@@ -44,6 +45,9 @@ export function parseHookEvent(raw: RawHookEvent): BeaconEvent {
     tty: raw.tty,
     remote: raw.remote,
     gotoPrecision,
+    // Only UserPromptSubmit carries a prompt → a summary snippet; other events leave it undefined
+    // so the state-machine keeps the previous summary instead of clobbering it.
+    summary: raw.prompt ? summarize(raw.prompt) : undefined,
     ts: raw.ts,
   };
 }

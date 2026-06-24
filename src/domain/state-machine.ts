@@ -36,5 +36,7 @@ export function applyEvent(session: Session, event: BeaconEvent): Session {
     }
   }
 
-  return { ...session, state, attention, seen, lastEventAt: event.ts };
+  // Update the summary only when this event carries one (UserPromptSubmit). Events in between
+  // (PreToolUse/Stop) carry none, so the latest prompt's snippet persists until the next prompt.
+  return { ...session, state, attention, seen, summary: event.summary ?? session.summary, lastEventAt: event.ts };
 }

@@ -103,22 +103,32 @@ function Row({ session, dot, onToast }: {
     <li className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
       <span className={`h-2 w-2 shrink-0 rounded-full ${showSeen ? dot : 'bg-zinc-700'}`} />
       <ToolIcon tool={session.tool} />
-      <span className="truncate text-sm text-zinc-100">{session.repoName}</span>
-      <HostIcon host={session.host} />
-      {session.gotoPrecision === 'degraded' && (
-        <Badge variant="outline" className="text-amber-400">
-          <AlertTriangle className="h-2.5 w-2.5" />degraded
-        </Badge>
-      )}
+      {/* Repo name + a dimmed summary line stack vertically; this flex-1 column pushes the
+          right cluster (move / time / buttons) to the edge, so no ml-auto is needed. */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm text-zinc-100">{session.repoName}</span>
+          <HostIcon host={session.host} />
+          {session.gotoPrecision === 'degraded' && (
+            <Badge variant="outline" className="text-amber-400">
+              <AlertTriangle className="h-2.5 w-2.5" />degraded
+            </Badge>
+          )}
+        </div>
+        {session.summary && (
+          // "What this session is about" — the latest prompt, trimmed to ~5 words.
+          <span className="truncate text-xs text-zinc-500">{session.summary}</span>
+        )}
+      </div>
       {moveTarget && (
         <Button variant="ghost" size="icon"
           aria-label={moveTarget === 'done' ? 'Move to Done' : 'Move to Needs you'}
-          className="app-no-drag ml-auto h-6 w-6 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-200 group-hover:opacity-100"
+          className="app-no-drag h-6 w-6 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-200 group-hover:opacity-100"
           onClick={() => window.beacon.move(session.tempId, moveTarget)}>
           {moveTarget === 'done' ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
         </Button>
       )}
-      <span className={`${moveTarget ? '' : 'ml-auto '}shrink-0 text-xs tabular-nums text-zinc-500`}>
+      <span className="shrink-0 text-xs tabular-nums text-zinc-500">
         {relativeTime(session.lastEventAt, Date.now())}
       </span>
       {showSeen && (

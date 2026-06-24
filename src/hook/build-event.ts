@@ -39,11 +39,15 @@ export function buildRawEvent(args: BuildEventArgs): RawHookEvent {
   const stdin = (args.stdin ?? {}) as Record<string, unknown>;
   const sessionId = typeof stdin.session_id === 'string' ? stdin.session_id : undefined;
   const stdinCwd = typeof stdin.cwd === 'string' ? stdin.cwd : undefined;
+  // UserPromptSubmit carries the user's prompt; other events don't. Used only to derive a
+  // short session-summary snippet downstream — the full prompt is never persisted.
+  const prompt = typeof stdin.prompt === 'string' ? stdin.prompt : undefined;
   return {
     tool: args.tool,
     event: args.event,
     sessionId,
     cwd: stdinCwd ?? args.cwd,
+    prompt,
     gitRoot: args.gitRoot,
     host: detectHost(args.env),
     termSessionId: args.env.TERM_SESSION_ID,

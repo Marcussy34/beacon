@@ -43,4 +43,11 @@ describe('parseHookEvent', () => {
   it('throws on an unmapped event', () => {
     expect(() => parseHookEvent({ ...claude, event: 'Bogus' })).toThrow(/Unmapped/);
   });
+  it('derives a truncated summary from a UserPromptSubmit prompt', () => {
+    const e = parseHookEvent({ ...claude, event: 'UserPromptSubmit', prompt: 'fix the failing build now please' });
+    expect(e.summary).toBe('fix the failing build now…');
+  });
+  it('leaves summary undefined when the event has no prompt', () => {
+    expect(parseHookEvent({ ...claude, event: 'Stop' }).summary).toBeUndefined();
+  });
 });

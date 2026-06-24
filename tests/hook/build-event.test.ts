@@ -54,4 +54,12 @@ describe('buildRawEvent', () => {
     expect(e.cwd).toBe('/cwd');
     expect(e.sessionId).toBeUndefined();
   });
+  it('captures a string prompt from stdin (UserPromptSubmit)', () => {
+    const e = buildRawEvent({ tool: 'claude', event: 'UserPromptSubmit', env: {}, stdin: { prompt: 'do the thing' }, cwd: '/c', ts: 1 });
+    expect(e.prompt).toBe('do the thing');
+  });
+  it('leaves prompt undefined when stdin has none or it is not a string', () => {
+    expect(buildRawEvent({ tool: 'claude', event: 'Stop', env: {}, stdin: {}, cwd: '/c', ts: 1 }).prompt).toBeUndefined();
+    expect(buildRawEvent({ tool: 'claude', event: 'Stop', env: {}, stdin: { prompt: 42 }, cwd: '/c', ts: 1 }).prompt).toBeUndefined();
+  });
 });

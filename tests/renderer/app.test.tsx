@@ -21,6 +21,7 @@ const reconciled: Session = {
   state: 'done',
   attention: 'done',
   seen: false,
+  summary: 'fix the build',
   startedAt: 1,
   lastEventAt: 2,
 };
@@ -47,6 +48,19 @@ describe('App panel', () => {
     render(<App />);
     expect(await screen.findByText('predictefy')).toBeTruthy();
     expect(screen.getByText('Done')).toBeTruthy(); // group heading for attention:'done'
+  });
+
+  it('renders the per-session summary snippet under the repo name', async () => {
+    render(<App />);
+    expect(await screen.findByText('fix the build')).toBeTruthy();
+  });
+
+  it('renders a row without a summary without crashing', async () => {
+    const noSummary: Session = { ...reconciled, summary: undefined };
+    mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [noSummary] }) });
+    render(<App />);
+    expect(await screen.findByText('predictefy')).toBeTruthy();
+    expect(screen.queryByText('fix the build')).toBeNull();
   });
 
   it('Go to calls beacon.goto with tempId, never the display id', async () => {
