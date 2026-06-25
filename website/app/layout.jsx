@@ -12,7 +12,28 @@ export const metadata = {
 
 const navbar = (
   <Navbar
-    logo={<b>🔦 Beacon</b>}
+    logo={
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontWeight: 700,
+          lineHeight: 1,
+        }}
+      >
+        {/* Fix the SVG size inside Nextra's logo slot and use the canonical Beacon ring. */}
+        <img
+          src="/favicon.svg"
+          alt=""
+          aria-hidden="true"
+          width="20"
+          height="20"
+          style={{ display: 'block', flex: '0 0 auto' }}
+        />
+        <span>Beacon</span>
+      </span>
+    }
     projectLink="https://github.com/Marcussy34/beacon"
   />
 )
