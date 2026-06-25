@@ -37,6 +37,8 @@ snaps you to the exact terminal tab or editor window.
   displays. Summon and dismiss it instantly (shortcut configurable).
 - **"Go to" that actually lands** — focuses the right window, and on supported setups the **exact
   integrated-terminal tab** (via the optional [editor companion extension](#exact-terminal-focus-vs-code--cursor)).
+- **One-click resume** — copy a ready-to-paste `claude --resume` / `codex resume` command for any session
+  straight to your clipboard.
 - **Click to clear** — mark a session seen; the dot clears and the badge decrements.
 - **Zero per-repo setup** — one global hook install covers every repo, for both tools, from day one.
 

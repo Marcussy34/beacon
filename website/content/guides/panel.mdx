@@ -91,11 +91,15 @@ tinted to match the row text.
 | ▭ terminal | **Terminal.app** |
 | ? circle | **Unknown** — host couldn't be detected (often a remote or detached session) |
 
+Hover a row and a small **copy** button appears just to the right of this icon — it copies the
+session's resume command (see **Badges & actions** below).
+
 ### Badges & actions
 
 | Element | Meaning |
 | --- | --- |
 | ⚠️ **degraded** (amber badge) | "Go to" can't pinpoint the exact window — the session is remote/tmux/SSH or its tty is unknown, so it falls back to revealing or copying the path |
+| ⧉ copy *(hover, beside the host icon)* | **Copy resume command** — puts a ready-to-paste command on your clipboard (`claude --resume <id>` or `codex resume <id>`) so you can reopen this exact session in a terminal. Appears only for sessions that have a resumable id |
 | ✓ check button | **Mark seen** — clears the dot and decrements the menu-bar badge |
 | ↓ / ↑ chevron *(hover)* | **Move** a row between **Needs you** and **Done**; new activity moves it back |
 | ✕ *(hover)* | **Dismiss** — remove the row (it returns on the session's next event) |
