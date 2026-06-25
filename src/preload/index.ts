@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('beacon', {
   move: (key: string, group: 'needsYou' | 'done') => ipcRenderer.invoke('move', key, group), // demote/escalate
   goto: (key: string) => ipcRenderer.invoke('goto', key),
   hide: () => ipcRenderer.invoke('hide'), // close button: hide the persistent panel
+  copy: (text: string) => ipcRenderer.invoke('copy', text), // copy a resume command to the clipboard
 
   onUpdate: (cb: (snap: unknown) => void) => {
     const h = (_e: unknown, snap: unknown) => cb(snap);

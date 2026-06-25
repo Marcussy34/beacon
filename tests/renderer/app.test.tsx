@@ -34,6 +34,7 @@ function mockBeacon(over: Partial<Window['beacon']> = {}) {
     dismiss: vi.fn().mockResolvedValue(undefined),
     move: vi.fn().mockResolvedValue(undefined),
     hide: vi.fn().mockResolvedValue(undefined),
+    copy: vi.fn().mockResolvedValue(undefined),
     onUpdate: vi.fn().mockReturnValue(() => {}),
     ...over,
   };
@@ -113,6 +114,28 @@ describe('App panel', () => {
     const btn = await screen.findByRole('button', { name: /move to done/i });
     fireEvent.click(btn);
     await waitFor(() => expect(beacon.move).toHaveBeenCalledWith(waiting.tempId, 'done'));
+  });
+
+  it('renders a copy-resume button for a session with a resumable id', async () => {
+    render(<App />);
+    expect(await screen.findByRole('button', { name: /copy resume command/i })).toBeTruthy();
+  });
+
+  it('Copy resume calls beacon.copy with the exact resume command', async () => {
+    const beacon = mockBeacon(); // `reconciled` is a codex session with codexSessionId set
+    render(<App />);
+    const copyBtn = await screen.findByRole('button', { name: /copy resume command/i });
+    fireEvent.click(copyBtn);
+    await waitFor(() =>
+      expect(beacon.copy).toHaveBeenCalledWith(`codex resume ${reconciled.codexSessionId}`));
+  });
+
+  it('hides the copy-resume button when the session has no resumable id', async () => {
+    const noId: Session = { ...reconciled, codexSessionId: undefined };
+    mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [noId] }) });
+    render(<App />);
+    expect(await screen.findByText('predictefy')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /copy resume command/i })).toBeNull();
   });
 
   it('the close button hides the panel via beacon.hide', async () => {

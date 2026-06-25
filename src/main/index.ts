@@ -1,4 +1,4 @@
-import { app, globalShortcut, ipcMain } from 'electron';
+import { app, clipboard, globalShortcut, ipcMain } from 'electron';
 import { homedir } from 'node:os';
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -73,6 +73,12 @@ else {
     ipcMain.handle('move', (_e, key: string, group: 'needsYou' | 'done') => handlers.move(key, group)); // demote/escalate between Needs-you ↔ Done
     ipcMain.handle('goto', (_e, key: string) => handlers.goto(key));
     ipcMain.handle('hide', () => panel.hide()); // in-panel close button
+    // Generic clipboard write — the renderer sends a prebuilt resume command (see resume-command.ts).
+    // Done in main because the panel is a non-activating NSPanel where navigator.clipboard is unreliable.
+    // Guard the type so a malformed call can't write "[object Object]" or an unbounded blob.
+    ipcMain.handle('copy', (_e, text: string) => {
+      if (typeof text === 'string' && text) clipboard.writeText(text);
+    });
 
     // Launching a second instance summons the panel instead of starting another app.
     app.on('second-instance', () => panel.show());

@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   SquareTerminal, CircleHelp,
-  AlertTriangle, ArrowRight, Check, X, ChevronDown, ChevronUp,
+  AlertTriangle, ArrowRight, Check, Copy, X, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { relativeTime } from '@/lib/relative-time';
 import { groupSessions, type GroupedSessions } from '../../core/view-model';
+import { resumeCommand } from '../../domain/resume-command';
 import type { Session } from '../../domain/types';
 
 // The renderer addresses sessions by `tempId` (the store's stable map key), NOT `id`
@@ -21,6 +22,7 @@ declare global {
       dismiss(tempId: string): Promise<void>;
       move(tempId: string, group: 'needsYou' | 'done'): Promise<void>;
       hide(): Promise<void>;
+      copy(text: string): Promise<void>;
       onUpdate(cb: (s: Snap) => void): () => void;
     };
   }
@@ -95,9 +97,23 @@ function Row({ session, dot, onToast }: {
   // Grouping is by state: a waiting row lives in Needs-you, a done row in Done. Offer the inverse move.
   const moveTarget: 'done' | 'needsYou' | null =
     session.state === 'waiting' ? 'done' : session.state === 'done' ? 'needsYou' : null;
+  // null when this session has no resumable id for its tool → the copy button isn't rendered.
+  const resumeCmd = resumeCommand(session);
+  const [copied, setCopied] = useState(false);
+  // Own the copied-✓ timer in a ref so re-clicks restart it and unmount clears it (no stray timeout).
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copiedTimer.current), []);
   const go = async () => {
     const res = await window.beacon.goto(session.tempId);
     if (!res.ok) onToast(res.message);
+  };
+  const copyResume = async () => {
+    if (!resumeCmd) return;
+    await window.beacon.copy(resumeCmd);
+    setCopied(true);                          // flip icon to ✓ briefly as copied-feedback
+    clearTimeout(copiedTimer.current);        // restart the window on a rapid re-click
+    copiedTimer.current = setTimeout(() => setCopied(false), 1000);
+    onToast(`Copied: ${resumeCmd}`);
   };
   return (
     <li className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
@@ -109,6 +125,15 @@ function Row({ session, dot, onToast }: {
         <div className="flex items-center gap-2">
           <span className="truncate text-sm text-zinc-100">{session.repoName}</span>
           <HostIcon host={session.host} />
+          {resumeCmd && (
+            // Copy the resume command. Hover-only (like the ✕/chevron), beside the host icon —
+            // it sits in the empty space after the icon, so revealing it causes no layout shift.
+            <Button variant="ghost" size="icon" aria-label="Copy resume command" title={resumeCmd}
+              className="app-no-drag h-5 w-5 shrink-0 text-zinc-500 opacity-0 transition-opacity hover:text-zinc-200 group-hover:opacity-100"
+              onClick={copyResume}>
+              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          )}
           {session.gotoPrecision === 'degraded' && (
             <Badge variant="outline" className="text-amber-400">
               <AlertTriangle className="h-2.5 w-2.5" />degraded
@@ -149,18 +174,34 @@ function Row({ session, dot, onToast }: {
   );
 }
 
+// Toast fade timing: ms held fully visible, and the opacity transition length (matches the class).
+const TOAST_HOLD_MS = 4000;
+const TOAST_FADE_MS = 300;
+
 export function App() {
   const [snap, setSnap] = useState<Snap>(EMPTY);
   const [toast, setToast] = useState<string | null>(null);
+  const [toastShown, setToastShown] = useState(false); // opacity target — drives the fade
+  const toastTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     window.beacon.getSnapshot().then(setSnap);
     return window.beacon.onUpdate(setSnap);
   }, []);
+  // Clear any in-flight fade timers on unmount so they can't fire on a gone component.
+  useEffect(() => () => toastTimers.current.forEach(clearTimeout), []);
 
+  // Mount hidden, fade in, hold, fade out, then unmount — replacing any toast already on screen.
   const showToast = (m: string) => {
+    toastTimers.current.forEach(clearTimeout);
+    toastTimers.current = [];
     setToast(m);
-    setTimeout(() => setToast(null), 4000);
+    setToastShown(false);
+    toastTimers.current.push(
+      setTimeout(() => setToastShown(true), 10),                          // fade in (next paint)
+      setTimeout(() => setToastShown(false), TOAST_HOLD_MS),              // begin fade out
+      setTimeout(() => setToast(null), TOAST_HOLD_MS + TOAST_FADE_MS),    // unmount after fade
+    );
   };
 
   const groups = groupSessions(snap.sessions);
@@ -208,8 +249,8 @@ export function App() {
         })}
       </div>
 
-      {toast && (
-        <div className="rounded-lg border border-white/10 bg-zinc-800/90 px-3 py-2 text-xs text-zinc-200">
+      {toast !== null && (
+        <div className={`rounded-lg border border-white/10 bg-zinc-800/90 px-3 py-2 text-xs text-zinc-200 transition-opacity duration-300 ${toastShown ? 'opacity-100' : 'opacity-0'}`}>
           {toast}
         </div>
       )}
