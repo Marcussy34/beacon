@@ -130,6 +130,17 @@ describe('App panel', () => {
       expect(beacon.copy).toHaveBeenCalledWith(`codex resume ${reconciled.codexSessionId}`));
   });
 
+  it('shows copy feedback as an overlay instead of a layout row', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /copy resume command/i }));
+
+    const toast = await screen.findByText(`Copied: codex resume ${reconciled.codexSessionId}`);
+    expect(toast.className).toContain('absolute');
+    expect(toast.className).toContain('bottom-3');
+    expect(toast.className).toContain('pointer-events-none');
+    expect(toast.parentElement?.className).toContain('relative');
+  });
+
   it('hides the copy-resume button when the session has no resumable id', async () => {
     const noId: Session = { ...reconciled, codexSessionId: undefined };
     mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [noId] }) });

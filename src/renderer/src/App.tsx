@@ -210,7 +210,7 @@ export function App() {
     // The whole card is the drag handle (app-drag) so the entire band above the first group
     // moves the window; the scrollable list and the close button opt out (app-no-drag) so
     // scroll + clicks still register. bg .95 keeps the card near-solid (ChatGPT-style frost).
-    <div className="app-drag flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-zinc-900/98 p-3 text-zinc-100 backdrop-blur-xl">
+    <div className="app-drag relative flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-zinc-900/98 p-3 text-zinc-100 backdrop-blur-xl">
       <header className="flex items-center justify-between gap-2 px-1">
         <span className="text-sm font-semibold">Beacon</span>
         <div className="flex items-center gap-2">
@@ -250,7 +250,8 @@ export function App() {
       </div>
 
       {toast !== null && (
-        <div className={`rounded-lg border border-white/10 bg-zinc-800/90 px-3 py-2 text-xs text-zinc-200 transition-opacity duration-300 ${toastShown ? 'opacity-100' : 'opacity-0'}`}>
+        // Overlay the toast so copy feedback never changes the panel height or scrollbar.
+        <div className={`pointer-events-none absolute inset-x-3 bottom-3 z-10 truncate rounded-lg border border-white/10 bg-zinc-800/90 px-3 py-2 text-xs text-zinc-200 shadow-lg transition-opacity duration-300 ${toastShown ? 'opacity-100' : 'opacity-0'}`}>
           {toast}
         </div>
       )}

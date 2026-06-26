@@ -3,3 +3,28 @@
   --nextra-primary-hue: 35deg;
   --nextra-primary-saturation: 95%;
 }
+
+/* Product preview images should read like screenshots, not inline article art. */
+.beacon-product-preview {
+  margin: 1.5rem 0 0;
+}
+
+.beacon-product-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(161, 161, 170, 0.24);
+  border-radius: 12px;
+}
+
+.beacon-product-preview figcaption {
+  margin-top: 0.625rem;
+  color: #71717a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.dark .beacon-product-preview figcaption {
+  color: #a1a1aa;
+}

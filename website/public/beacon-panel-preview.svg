@@ -1,0 +1,141 @@
+<svg width="1280" height="760" viewBox="0 0 1280 760" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Beacon floating panel preview</title>
+  <desc id="desc">A preview of Beacon's floating panel showing Claude Code and Codex sessions grouped by Needs you, Done, Working, and Recently closed.</desc>
+  <defs>
+    <linearGradient id="wallpaper" x1="80" y1="70" x2="1160" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="0.52" stop-color="#18181B"/>
+      <stop offset="1" stop-color="#062B2D"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="339" y1="118" x2="941" y2="664" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#27272A" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#111113" stop-opacity="0.98"/>
+    </linearGradient>
+    <filter id="shadow" x="257" y="68" width="766" height="682" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="28" stdDeviation="36" flood-color="#000000" flood-opacity="0.46"/>
+    </filter>
+    <style>
+      text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .muted { fill: #A1A1AA; }
+      .dim { fill: #71717A; }
+      .title { fill: #FAFAFA; font-size: 20px; font-weight: 700; }
+      .small { font-size: 15px; }
+      .tiny { font-size: 13px; }
+      .section { fill: #71717A; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+      .row-title { fill: #F4F4F5; font-size: 16px; font-weight: 600; }
+      .summary { fill: #A1A1AA; font-size: 13px; }
+      .button { fill: #FAFAFA; font-size: 13px; font-weight: 700; }
+      .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="760" rx="0" fill="url(#wallpaper)"/>
+  <path d="M0 0H1280V42H0V0Z" fill="#27272A"/>
+  <circle cx="26" cy="21" r="4" fill="#EF4444"/>
+  <circle cx="42" cy="21" r="4" fill="#F59E0B"/>
+  <circle cx="58" cy="21" r="4" fill="#22C55E"/>
+  <rect x="103" y="10" width="212" height="22" rx="11" fill="#111113"/>
+  <circle cx="122" cy="21" r="6" fill="#F59E0B"/>
+  <text x="138" y="26" fill="#F4F4F5" font-size="13" font-weight="650">Beacon</text>
+  <circle cx="181" cy="14" r="8" fill="#EF4444"/>
+  <text x="177" y="18" fill="#FFFFFF" font-size="11" font-weight="800">3</text>
+  <text x="1112" y="27" class="muted tiny">Thu 10:24 AM</text>
+
+  <text x="320" y="98" fill="#E4E4E7" font-size="18" font-weight="700">Cmd+Shift+Space opens Beacon above your work</text>
+  <text x="320" y="125" class="muted small">One panel for every Claude Code and Codex CLI session.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="310" y="150" width="660" height="540" rx="24" fill="url(#panel)" stroke="rgba(255,255,255,0.12)" stroke-width="1.4"/>
+    <rect x="328" y="168" width="624" height="504" rx="17" fill="#18181B" fill-opacity="0.28" stroke="rgba(255,255,255,0.06)"/>
+
+    <text x="350" y="204" class="title">Beacon</text>
+    <text x="828" y="204" class="dim small">7 sessions</text>
+    <rect x="913" y="181" width="22" height="22" rx="7" fill="#27272A" stroke="rgba(255,255,255,0.08)"/>
+    <path d="M920 188L928 196M928 188L920 196" stroke="#A1A1AA" stroke-width="1.7" stroke-linecap="round"/>
+
+    <g transform="translate(350 238)">
+      <circle cx="5" cy="-5" r="4" fill="#EF4444"/>
+      <text x="18" y="0" class="section">Needs you</text>
+      <text x="103" y="0" class="dim tiny">2</text>
+    </g>
+
+    <g transform="translate(342 255)">
+      <rect width="595" height="70" rx="13" fill="#FFFFFF" fill-opacity="0.055"/>
+      <circle cx="21" cy="24" r="5" fill="#EF4444"/>
+      <circle cx="45" cy="24" r="8" fill="#A1A1AA"/>
+      <text x="63" y="29" class="row-title">beacon</text>
+      <text x="63" y="51" class="summary">approve filesystem write for docs</text>
+      <text x="406" y="29" class="dim tiny">now</text>
+      <rect x="459" y="14" width="72" height="32" rx="9" fill="#3F3F46"/>
+      <text x="477" y="35" class="button">Go to</text>
+      <path d="M517 23L525 31L517 39" stroke="#FAFAFA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="544" y="35" class="dim small">x</text>
+    </g>
+
+    <g transform="translate(342 333)">
+      <rect width="595" height="70" rx="13" fill="#FFFFFF" fill-opacity="0.035"/>
+      <circle cx="21" cy="24" r="5" fill="#EF4444"/>
+      <circle cx="45" cy="24" r="8" fill="#A1A1AA"/>
+      <text x="63" y="29" class="row-title">docs-site</text>
+      <text x="63" y="51" class="summary">waiting on Vercel deploy check</text>
+      <rect x="280" y="14" width="88" height="28" rx="8" fill="#27272A" stroke="rgba(255,255,255,0.12)"/>
+      <text x="297" y="33" fill="#FBBF24" font-size="12" font-weight="700">degraded</text>
+      <text x="406" y="29" class="dim tiny">2m</text>
+      <rect x="459" y="14" width="72" height="32" rx="9" fill="#3F3F46"/>
+      <text x="477" y="35" class="button">Go to</text>
+      <path d="M517 23L525 31L517 39" stroke="#FAFAFA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="544" y="35" class="dim small">x</text>
+    </g>
+
+    <g transform="translate(350 435)">
+      <circle cx="5" cy="-5" r="4" fill="#0EA5E9"/>
+      <text x="18" y="0" class="section">Done</text>
+      <text x="58" y="0" class="dim tiny">1</text>
+    </g>
+
+    <g transform="translate(342 452)">
+      <rect width="595" height="58" rx="13" fill="#FFFFFF" fill-opacity="0.035"/>
+      <circle cx="21" cy="24" r="5" fill="#0EA5E9"/>
+      <circle cx="45" cy="24" r="8" fill="#A1A1AA"/>
+      <text x="63" y="29" class="row-title">extension</text>
+      <text x="63" y="49" class="summary">packaged focus helper</text>
+      <text x="406" y="29" class="dim tiny">12m</text>
+      <rect x="459" y="13" width="72" height="32" rx="9" fill="#3F3F46"/>
+      <text x="477" y="34" class="button">Go to</text>
+      <path d="M517 22L525 30L517 38" stroke="#FAFAFA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <line x1="342" y1="540" x2="938" y2="540" stroke="rgba(255,255,255,0.10)"/>
+    <g transform="translate(350 568)">
+      <circle cx="5" cy="-5" r="4" fill="#22C55E"/>
+      <text x="18" y="0" class="section">Working</text>
+      <text x="83" y="0" class="dim tiny">3</text>
+    </g>
+
+    <g transform="translate(342 585)">
+      <rect width="595" height="52" rx="13" fill="#FFFFFF" fill-opacity="0.025"/>
+      <circle cx="21" cy="24" r="5" fill="#22C55E"/>
+      <circle cx="45" cy="24" r="8" fill="#A1A1AA"/>
+      <text x="63" y="29" class="row-title">api-cleanup</text>
+      <text x="245" y="29" class="summary">refactoring collector events</text>
+      <text x="406" y="29" class="dim tiny">33s</text>
+      <rect x="459" y="10" width="72" height="32" rx="9" fill="#3F3F46"/>
+      <text x="477" y="31" class="button">Go to</text>
+      <path d="M517 19L525 27L517 35" stroke="#FAFAFA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g transform="translate(350 660)">
+      <circle cx="5" cy="-5" r="4" fill="#71717A"/>
+      <text x="18" y="0" class="section">Recently closed</text>
+      <text x="134" y="0" class="dim tiny">1</text>
+    </g>
+  </g>
+
+  <g transform="translate(965 322)">
+    <rect x="0" y="0" width="120" height="42" rx="21" fill="#111113" stroke="rgba(255,255,255,0.12)"/>
+    <circle cx="22" cy="21" r="8" fill="#F59E0B"/>
+    <circle cx="82" cy="13" r="11" fill="#EF4444"/>
+    <text x="78" y="17" fill="#FFFFFF" font-size="12" font-weight="800">3</text>
+    <text x="40" y="27" fill="#F4F4F5" font-size="14" font-weight="700">menu bar</text>
+  </g>
+</svg>
