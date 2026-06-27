@@ -32,7 +32,8 @@ Sessions are grouped by what they need from you:
 | State            | Meaning                                              |
 | ---------------- | ---------------------------------------------------- |
 | **Needs you**    | Waiting on a permission prompt or your input         |
-| **Done**         | The turn finished — your move                        |
+| **Done**         | The turn finished in the last 30 minutes — your move |
+| **Finished**     | The turn finished more than 30 minutes ago           |
 | **Working**      | Actively running a turn                              |
 | **Recently closed** | The session ended (kept up to a day, then auto-removed) |
 
@@ -40,9 +41,9 @@ Beacon **auto-ages** the list: a closed session — or one gone silent because i
 without a clean exit — is removed after **24 hours** of no activity, so dead rows clear themselves.
 Sessions still waiting on you are never auto-removed; clear those by hand with the **×**.
 
-You can also **move** a row between **Needs you** and **Done** with the ↓ / ↑ chevron (hover a row):
-demote a prompt you've already handled, or re-flag a done one. If that session does something new,
-it returns to its real group automatically.
+You can also **move** a row between **Needs you** and a completed group with the ↓ / ↑ chevron
+(hover a row): demote a prompt you've already handled, or re-flag a done/finished one. If that
+session does something new, it returns to its real group automatically.
 
 ## Reading a session row
 
@@ -65,8 +66,9 @@ The dot's color tells you the session's state; it matches the section it's group
 | Dot | Meaning |
 | --- | --- |
 | 🔴 Red | **Needs you** — waiting on a permission prompt or your input |
-| 🔵 Blue | **Done** — the turn finished, your move |
-| 🟢 Green | **Working** — actively running a turn |
+| 🟢 Green | **Done** — the turn finished in the last 30 minutes |
+| 🔵 Blue | **Finished** — the turn finished more than 30 minutes ago |
+| 🟠 Orange | **Working** — actively running a turn |
 | ⚪ Gray | **Recently closed** — the session ended |
 
 A row's dot is **bright only while the session needs attention and you haven't seen it yet**. Once you
@@ -101,7 +103,7 @@ session's resume command (see **Badges & actions** below).
 | ⚠️ **degraded** (amber badge) | "Go to" can't pinpoint the exact window — the session is remote/tmux/SSH or its tty is unknown, so it falls back to revealing or copying the path |
 | ⧉ copy *(hover, beside the host icon)* | **Copy resume command** — puts a ready-to-paste command on your clipboard (`claude --resume <id>` or `codex resume <id>`) so you can reopen this exact session in a terminal. Appears only for sessions that have a resumable id |
 | ✓ check button | **Mark seen** — clears the dot and decrements the menu-bar badge |
-| ↓ / ↑ chevron *(hover)* | **Move** a row between **Needs you** and **Done**; new activity moves it back |
+| ↓ / ↑ chevron *(hover)* | **Move** a row between **Needs you** and **Done / Finished**; new activity moves it back |
 | ✕ *(hover)* | **Dismiss** — remove the row (it returns on the session's next event) |
 | **Go to →** | Focus this session's window/tab (see [the next guide](/guides/go-to)) |
 

@@ -30,7 +30,7 @@ snaps you to the exact terminal tab or editor window.
 ## Features
 
 - **All your agents, one glance** — live state for every Claude Code and Codex session across every repo:
-  `needs-you` / `working` / `done` / `recently closed`.
+  `needs-you` / `done` / `finished` / `working` / `recently closed`.
 - **Ambient menu-bar badge** — the icon lights up with a count the instant a session needs you or finishes.
   No need to summon anything.
 - **⌘⇧Space floating panel** — a persistent, movable HUD that floats above everything, across all Spaces and

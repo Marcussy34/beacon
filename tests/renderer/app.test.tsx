@@ -4,6 +4,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from '../../src/renderer/src/App';
 import type { Session } from '../../src/domain/types';
 
+const RECENT_TS = Date.now();
+
 // A RECONCILED Codex session: display `id` diverges from the store key `tempId`.
 // Row actions MUST use tempId; using id would silently no-op (the M3b bug).
 const reconciled: Session = {
@@ -22,8 +24,8 @@ const reconciled: Session = {
   attention: 'done',
   seen: false,
   summary: 'fix the build',
-  startedAt: 1,
-  lastEventAt: 2,
+  startedAt: RECENT_TS - 1000,
+  lastEventAt: RECENT_TS,
 };
 
 function mockBeacon(over: Partial<Window['beacon']> = {}) {
@@ -105,6 +107,54 @@ describe('App panel', () => {
     fireEvent.click(btn);
     await waitFor(() => expect(beacon.move).toHaveBeenCalledWith(reconciled.tempId, 'needsYou'));
     expect(beacon.move).not.toHaveBeenCalledWith(reconciled.id, 'needsYou');
+  });
+
+  it('renders old done rows under Finished and keeps the move action', async () => {
+    const oldDone: Session = {
+      ...reconciled,
+      id: 'codex:old',
+      tempId: 'codex:old:tty',
+      repoName: 'oldrepo',
+      lastEventAt: Date.now() - (31 * 60 * 1000),
+    };
+    const beacon = mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [oldDone] }) });
+
+    render(<App />);
+
+    expect(await screen.findByText('Finished')).toBeTruthy();
+    const btn = await screen.findByRole('button', { name: /move to needs you/i });
+    fireEvent.click(btn);
+    await waitFor(() => expect(beacon.move).toHaveBeenCalledWith(oldDone.tempId, 'needsYou'));
+  });
+
+  it('uses green for Done, blue for Finished, and orange for Working', async () => {
+    const finished: Session = {
+      ...reconciled,
+      id: 'codex:finished',
+      tempId: 'codex:finished:tty',
+      repoName: 'finishedrepo',
+      lastEventAt: Date.now() - (31 * 60 * 1000),
+    };
+    const working: Session = {
+      ...reconciled,
+      id: 'codex:working',
+      tempId: 'codex:working:tty',
+      repoName: 'workingrepo',
+      state: 'working',
+      attention: 'none',
+      seen: true,
+      lastEventAt: RECENT_TS,
+    };
+    mockBeacon({ getSnapshot: vi.fn().mockResolvedValue({ version: 1, sessions: [reconciled, finished, working] }) });
+
+    render(<App />);
+
+    const doneHeading = await screen.findByRole('heading', { name: /done/i });
+    const finishedHeading = await screen.findByRole('heading', { name: /finished/i });
+    const workingHeading = await screen.findByRole('heading', { name: /working/i });
+    expect(doneHeading.querySelector('span')?.className).toContain('bg-green-500');
+    expect(finishedHeading.querySelector('span')?.className).toContain('bg-sky-500');
+    expect(workingHeading.querySelector('span')?.className).toContain('bg-orange-500');
   });
 
   it('Move on a needs-you row demotes via beacon.move(tempId, "done")', async () => {
