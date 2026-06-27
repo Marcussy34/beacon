@@ -17,7 +17,7 @@ It behaves like the ChatGPT macOS launcher: summoned with a global hotkey (**⌘
 ## 2. Goals & Non-Goals
 
 ### Goals
-- One glanceable view of all active/working/waiting/done AI coding sessions across every repo.
+- One glanceable view of all active/working/waiting/done/finished AI coding sessions across every repo.
 - Ambient signal (menu-bar badge) the moment a session needs you or finishes — without summoning the panel.
 - Click an indicator to mark it seen (dot clears, badge decrements).
 - "Go to" a session → focus the correct repo/editor window (and exact terminal tab where possible).
@@ -42,7 +42,7 @@ It behaves like the ChatGPT macOS launcher: summoned with a global hotkey (**⌘
   - `SessionStart` → session started
   - `PreToolUse` / `UserPromptSubmit` → working
   - `Notification` (matchers `permission_prompt`, `idle_prompt`) → **needs you**
-  - `Stop` → turn finished (idle / **done, your move**)
+  - `Stop` → turn finished (idle / **done, your move**; displays as **finished** after 30 minutes)
   - `SessionEnd` → closed
 - Hook stdin payload includes: `session_id` (stable per `claude` invocation → **dedup key**), `cwd`, `transcript_path`, `hook_event_name`, `permission_mode`.
 - Hook subprocess environment exposes `TERM_PROGRAM`, `TERM_SESSION_ID` (Terminal.app), `VSCODE_*` (in VS Code), `__CFBundleIdentifier` (host app bundle id), `CLAUDE_CODE_SESSION_ID`.
@@ -94,7 +94,7 @@ Single Electron app (TypeScript). Six small, independently-testable units:
   - `started` → SessionStart
   - `working` → PreToolUse / UserPromptSubmit
   - `waiting (needs-you)` → Notification(permission_prompt|idle_prompt) / Codex PermissionRequest → `attention=needs-you`, `seen=false`
-  - `done (turn-ended)` → Stop → `attention=done`, `seen=false`
+  - `done (turn-ended)` → Stop → `attention=done`, `seen=false`; display splits this into **Done** for the first 30 minutes and **Finished** after that.
   - `closed` → SessionEnd (kept briefly in "recently closed", then evicted)
 - Staleness: TTL eviction + manual "clear all" + Codex rollout reconcile.
 
@@ -110,7 +110,7 @@ Single Electron app (TypeScript). Six small, independently-testable units:
 - **Focus model — REVISED (persistent HUD, per user decision 2026-06-23):** summon with `show()` (takes focus). The panel then **stays visible** across every Space/display and over other apps; it does **NOT** hide on blur. It is **movable** (the header is a `-webkit-app-region: drag` handle) and **resizable** (`resizable:true`, `minWidth/Height`). Dismiss only via the global shortcut, **Esc**, or the in-panel **close (X)** button. (The original "ChatGPT-style hide-on-blur" launcher model was dropped: it made the panel flash-and-vanish on a Space switch and disappear on any click elsewhere — the opposite of the always-on-screen behavior the user wants.)
 - ⚠️ Fullscreen + Stage Manager behavior must be confirmed in the E2E checklist — known area of macOS quirks.
 - Global shortcut **⌘⇧Space** toggles show/hide (configurable). See §4.7 for conflict handling.
-- Layout: sessions grouped — **Needs you** / **Working** / **Done** / **Recently closed**. Each row: status dot (🔴 needs-you / 🟢 working / ✅ done), repo name, tool icon (Claude/Codex), host icon (Terminal/VS Code/Cursor), a "degraded" marker when applicable, relative time, and a **Go to** button.
+- Layout: sessions grouped — **Needs you** / **Done** / **Finished** / **Working** / **Recently closed**. **Done** means the turn finished in the last 30 minutes; **Finished** means it finished more than 30 minutes ago. Each row: status dot (🔴 needs-you / 🟢 done / 🔵 finished / 🟠 working / ⚪ closed), repo name, tool icon (Claude/Codex), host icon (Terminal/VS Code/Cursor), a "degraded" marker when applicable, relative time, and a **Go to** button.
 - Live updates pushed from main via IPC (contextBridge, no nodeIntegration).
 
 ### 4.6 Focuser ("Go to")

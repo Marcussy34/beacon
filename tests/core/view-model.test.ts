@@ -26,11 +26,26 @@ describe('groupSessions', () => {
       s({ id: 'c', attention: 'done', state: 'done', lastEventAt: 2 }),
       s({ id: 'd', state: 'closed', lastEventAt: 1 }),
       s({ id: 'e', state: 'working', lastEventAt: 11 }),
-    ]);
+    ], 12);
     expect(g.needsYou.map(x => x.id)).toEqual(['a']);
     expect(g.working.map(x => x.id)).toEqual(['e', 'b']); // desc by lastEventAt
     expect(g.done.map(x => x.id)).toEqual(['c']);
     expect(g.closed.map(x => x.id)).toEqual(['d']);
+  });
+
+  it('splits done sessions into recent Done and older Finished', () => {
+    const s = (over: Partial<Session>): Session => ({ ...base, ...over });
+    const now = 10_000_000;
+    const doneWindow = 30 * 60 * 1000;
+    const g = groupSessions([
+      s({ id: 'old', state: 'done', lastEventAt: now - doneWindow - 1 }),
+      s({ id: 'boundary', state: 'done', lastEventAt: now - doneWindow }),
+      s({ id: 'recent', state: 'done', lastEventAt: now - doneWindow + 1 }),
+    ], now);
+
+    // Exactly 30 minutes old is still in the recent Done window.
+    expect(g.done.map(x => x.id)).toEqual(['recent', 'boundary']);
+    expect(g.finished.map(x => x.id)).toEqual(['old']);
   });
 
   it('keeps a seen done/needs-you session in its bucket (markSeen clears attention, state stays)', () => {
@@ -40,7 +55,7 @@ describe('groupSessions', () => {
     const g = groupSessions([
       s({ id: 'doneSeen', state: 'done', attention: 'none', seen: true, lastEventAt: 3 }),
       s({ id: 'needsSeen', state: 'waiting', attention: 'none', seen: true, lastEventAt: 4 }),
-    ]);
+    ], 5);
     expect(g.done.map(x => x.id)).toEqual(['doneSeen']);
     expect(g.needsYou.map(x => x.id)).toEqual(['needsSeen']);
     expect(g.working).toEqual([]);

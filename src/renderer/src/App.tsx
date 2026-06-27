@@ -32,11 +32,12 @@ const EMPTY: Snap = { version: 1, sessions: [] };
 
 // Display order + heading + status-dot color. Keys match GroupedSessions.
 // Needs-you stays pinned on top (urgent — the menu-bar badge fires for it); the rest run
-// Done → Working → Recently closed per request.
+// Done → Finished → Working → Recently closed per request.
 const GROUPS: ReadonlyArray<{ key: keyof GroupedSessions; label: string; dot: string }> = [
   { key: 'needsYou', label: 'Needs you', dot: 'bg-red-500' },
-  { key: 'done', label: 'Done', dot: 'bg-sky-500' },
-  { key: 'working', label: 'Working', dot: 'bg-emerald-500' },
+  { key: 'done', label: 'Done', dot: 'bg-green-500' },
+  { key: 'finished', label: 'Finished', dot: 'bg-sky-500' },
+  { key: 'working', label: 'Working', dot: 'bg-orange-500' },
   { key: 'closed', label: 'Recently closed', dot: 'bg-zinc-500' },
 ];
 
@@ -94,7 +95,7 @@ function Row({ session, dot, onToast }: {
   session: Session; dot: string; onToast: (m: string) => void;
 }) {
   const showSeen = session.attention !== 'none' && !session.seen;
-  // Grouping is by state: a waiting row lives in Needs-you, a done row in Done. Offer the inverse move.
+  // Grouping is by state/age: waiting lives in Needs-you, done lives in Done or Finished. Offer the inverse move.
   const moveTarget: 'done' | 'needsYou' | null =
     session.state === 'waiting' ? 'done' : session.state === 'done' ? 'needsYou' : null;
   // null when this session has no resumable id for its tool → the copy button isn't rendered.
@@ -230,9 +231,10 @@ export function App() {
         {GROUPS.map(({ key, label, dot }) => {
           const items = groups[key];
           if (items.length === 0) return null;
-          // Divider above Working: splits the attention section (Needs you + Done) from the
+          // Divider above Working: splits the attention section (Needs you + completed) from the
           // in-progress rows. Only when something is actually rendered above it.
-          const divider = key === 'working' && (groups.needsYou.length > 0 || groups.done.length > 0);
+          const divider = key === 'working' &&
+            (groups.needsYou.length > 0 || groups.done.length > 0 || groups.finished.length > 0);
           return (
             // mb-5 gives an even ~20px gap between every group; the divider's pt-5 matches that
             // previous gap so the line sits symmetrically (equal space above and below).
