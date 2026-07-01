@@ -103,8 +103,8 @@ export class SessionStore {
 
   /**
    * Remove stale sessions. "Stale" = SILENT (no events) past a threshold AND not awaiting the user:
-   * unseen needs-you / unseen done are protected and never time-evicted. closed → closedTtlMs,
-   * everything else (working/started, or an acknowledged needs-you/done) → deadTtlMs.
+   * unseen needs-you prompts are protected and never time-evicted. closed → closedTtlMs,
+   * everything else (working/started, or any done/finished row) → deadTtlMs.
    * Returns true if anything was removed.
    */
   sweepStale(now: number, closedTtlMs: number, deadTtlMs: number): boolean {
@@ -116,7 +116,7 @@ export class SessionStore {
   }
 
   private isStale(s: Session, now: number, closedTtlMs: number, deadTtlMs: number): boolean {
-    if (s.attention !== 'none' && !s.seen) return false; // awaiting you — protected
+    if (s.attention === 'needs-you' && !s.seen) return false; // awaiting input — protected
     const silent = now - s.lastEventAt;
     return s.state === 'closed' ? silent > closedTtlMs : silent > deadTtlMs;
   }

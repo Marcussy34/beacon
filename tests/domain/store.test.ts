@@ -51,13 +51,13 @@ describe('SessionStore', () => {
     expect(s.get('liveWorking')).toBeDefined();
   });
 
-  it('sweepStale never evicts unseen needs-you or unseen done, however old', () => {
+  it('sweepStale protects unseen needs-you but evicts unseen done past the dead ttl', () => {
     const s = new SessionStore();
     s.upsertFromEvent(ev('needs-you', 0, 'needs'));
     s.upsertFromEvent(ev('turn-done', 0, 'done'));
-    expect(s.sweepStale(DEAD * 1000, CLOSED, DEAD)).toBe(false);
+    expect(s.sweepStale(DEAD * 1000, CLOSED, DEAD)).toBe(true);
     expect(s.get('needs')).toBeDefined();
-    expect(s.get('done')).toBeDefined();
+    expect(s.get('done')).toBeUndefined();
   });
 
   it('sweepStale evicts an acknowledged (seen) done session past the dead ttl', () => {

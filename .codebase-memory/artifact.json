@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "525bd15f56ba7b1c4f7607f7ba586282225073eb",
+    "indexed_at": "2026-07-01T12:20:08Z",
+    "project": "Users-marcus-Projects-beacon",
+    "nodes": 523,
+    "edges": 924,
+    "original_size": 1572864,
+    "compressed_size": 84907,
+    "compression_level": 9
+}

@@ -9,8 +9,8 @@ import type { SessionsSnapshot } from '../domain/store';
 import type { AppPaths } from './app-paths';
 
 // Staleness sweep: a session is "silent" when no hook events have arrived for it. The sweep
-// removes silent-past-threshold sessions (see store.sweepStale). Both closed and presumed-dead
-// (working/started, or an acknowledged needs-you/done) sessions drop after 24 h silent.
+// removes silent-past-threshold sessions (see store.sweepStale). Active needs-you prompts stay
+// until handled; closed, working/started, and done/finished rows drop after 24 h silent.
 const CLOSED_TTL_MS = 24 * 60 * 60 * 1000;
 const DEAD_TTL_MS = 24 * 60 * 60 * 1000;
 const SWEEP_INTERVAL_MS = 60_000;
